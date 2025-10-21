@@ -1,13 +1,21 @@
 # skrib_frontend
 
-Frontend for skrib project, built with Vue 3 + Deno.
+Frontend for skrib project, built with Vue 3 + Vite.
+
+## Setup
+
+Install dependencies:
+
+```bash
+npm install
+```
 
 ## Development
 
 Start the development server:
 
 ```bash
-deno task dev
+npm run dev
 ```
 
 The app will be available at http://localhost:8000.
@@ -17,18 +25,38 @@ The app will be available at http://localhost:8000.
 Build the app for production:
 
 ```bash
-deno task build
+npm run build
 ```
 
 Preview the production build:
 
 ```bash
-deno task preview
+npm run preview
 ```
 
-## Notes
+## Project Structure
 
-- No Node.js required - uses Deno for serving and building
-- Vue is loaded from esm.sh CDN
-- Components are plain JavaScript modules using Vue's render functions
-- Static file serving with Deno's std/http server
+```
+skrib_frontend/
+├── api_specs/          # API specification documents
+├── src/
+│   ├── main.js        # Application entry point
+│   ├── App.vue        # Root component
+│   ├── components/    # Reusable components
+│   └── views/         # Page components
+├── index.html         # HTML entry point
+├── vite.config.js     # Vite configuration
+└── package.json       # Dependencies and scripts
+```
+
+## Features
+
+This application includes support for:
+- Authentication
+- Posting
+- Commenting
+- Upvoting
+- Tagging
+- Notifications
+
+See the `api_specs/` directory for detailed API specifications.
