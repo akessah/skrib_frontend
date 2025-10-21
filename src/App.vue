@@ -2,7 +2,14 @@
   <div id="app">
     <header>
       <nav>
-        <router-link to="/">Skrib</router-link>
+        <div class="nav-brand">
+          <router-link to="/">Skrib</router-link>
+        </div>
+        <div class="nav-links">
+          <router-link to="/" class="nav-link">Home</router-link>
+          <router-link to="/forum" class="nav-link">Forum</router-link>
+          <router-link to="/search" class="nav-link">Search</router-link>
+        </div>
       </nav>
     </header>
     <main>
@@ -43,15 +50,44 @@ header {
   padding: 1rem 2rem;
 }
 
-nav a {
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-brand a {
   color: #2c3e50;
   text-decoration: none;
   font-size: 1.5rem;
   font-weight: 600;
 }
 
-nav a:hover {
+.nav-brand a:hover {
   color: #42b983;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-link {
+  color: #2c3e50;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: #42b983;
+}
+
+.nav-link.router-link-active {
+  color: #42b983;
+  border-bottom: 2px solid #42b983;
+  padding-bottom: 0.25rem;
 }
 
 main {
