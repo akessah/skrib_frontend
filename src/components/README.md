@@ -167,8 +167,8 @@ Individual post page component for viewing full post content and comments.
   - `POST /api/Posting/deletePost` - Delete post
   - All commenting and upvoting endpoints
 
-### Profile.vue (Updated with Notifications)
-Main profile page component for authenticated users, now including notification management.
+### Profile.vue (Updated with Notifications and Tag Management)
+Main profile page component for authenticated users, now including notification and tag management.
 - **Features**: 
   - User information display (username, user ID)
   - Password change functionality
@@ -179,6 +179,14 @@ Main profile page component for authenticated users, now including notification 
     - Mark individual or all notifications as read
     - Notification statistics (unread/total count)
     - Refresh notifications
+  - **Tag management section**:
+    - View all user tags and labels
+    - Tag statistics (unique labels/total tags)
+    - Recent tags with book titles
+    - Toggle tag privacy (public/private)
+    - Remove individual tags
+    - View books by label
+    - Refresh tags
   - Navigation to other pages
   - Authentication protection (redirects to login if not authenticated)
 - **Authentication**: Requires user to be logged in
@@ -187,6 +195,136 @@ Main profile page component for authenticated users, now including notification 
   - `POST /api/Authentication/deleteUser` - Delete user account
   - `POST /api/Notifying/_getNotificationsByUser` - Load user notifications
   - `POST /api/Notifying/read` - Mark notifications as read
+  - `POST /api/Tagging/_getTagsByUser` - Load user tags
+  - `POST /api/Tagging/_getLabelsByUser` - Load user labels
+  - `POST /api/Tagging/removeTag` - Remove a tag
+  - `POST /api/Tagging/markPrivate` - Mark tag as private
+  - `POST /api/Tagging/markPublic` - Mark tag as public
+  - `GET https://www.googleapis.com/books/v1/volumes/{id}` - Get book details
+
+### Search.vue (Updated with Advanced Search)
+Advanced book search page with multiple search criteria and tag-based filtering.
+- **Features**:
+  - **Advanced Search Form**: Search by title, author, and tags
+  - **Tag Search Options**: Choose between "any tags" (union) or "all tags" (intersection)
+  - **Tag Autocomplete**: Suggestions based on existing public tags
+  - **Combined Search**: Use multiple criteria for precise results
+  - **Simplified Results**: Clean display showing title, author, and cover
+  - **Click Navigation**: Click any result to view detailed book page
+  - **Search Tips**: Helpful guidance for using advanced search features
+  - **Responsive Design**: Works perfectly on all screen sizes
+- **Route**: `/search` - Advanced book search page
+- **Authentication**: No authentication required for search, tagging requires login
+- **API Integration**: Google Books API and tagging API
+- **External APIs Used**:
+  - `GET https://www.googleapis.com/books/v1/volumes` - Search books
+  - `GET https://www.googleapis.com/books/v1/volumes/{id}` - Get book details
+  - `POST /api/Tagging/_getBooksByLabel` - Search books by tags
+  - `POST /api/Tagging/_getAllPublicTags` - Get available tags for suggestions
+
+### BookDetail.vue
+Detailed book information page with full book details and tagging functionality.
+- **Features**:
+  - Complete book information (title, authors, description, rating, publication details)
+  - Large book cover display
+  - Preview and info links to Google Books
+  - Tagging functionality for authenticated users
+  - View and manage existing tags
+  - Add new tags with validation
+  - Remove own tags
+  - Navigation back to search
+- **Route**: `/book/:id` - Individual book detail page
+- **Authentication**: Tagging requires user to be logged in
+- **API Integration**: Google Books API and tagging API
+- **External APIs Used**:
+  - `GET https://www.googleapis.com/books/v1/volumes/{id}` - Get book details
+  - All tagging endpoints for tag management
+
+## Book Search Components
+
+### AdvancedSearchForm.vue
+Advanced search form component with multiple search criteria and tag-based filtering.
+- **Features**:
+  - **Title Search**: Search by book title with partial matching
+  - **Author Search**: Search by author name
+  - **Tag Search**: Add multiple tags with autocomplete suggestions
+  - **Tag Options**: Checkbox to choose between "any tags" (union) or "all tags" (intersection)
+  - **Tag Autocomplete**: Real-time suggestions based on existing public tags
+  - **Combined Search**: Use multiple criteria simultaneously for precise results
+  - **Search Summary**: Shows search criteria and result count
+  - **Form Validation**: Ensures at least one search criterion is provided
+  - **Clear Function**: Reset all search criteria
+- **Events**:
+  - `@search-results` - Emitted with search results array
+  - `@search-started` - Emitted when search begins
+- **API Integration**: Uses Google Books API and tagging API for comprehensive search
+
+### BookSearchItem.vue
+Simplified book display component for search results with navigation to detail page.
+- **Props**:
+  - `book` (Object, required) - Book object from Google Books API
+- **Features**:
+  - Compact display showing only title, author, and cover
+  - Click to navigate to detailed book page
+  - Book cover with fallback for missing covers
+  - Hover effects with click indicator
+  - Responsive design optimized for search results
+  - Clean, minimal interface for quick browsing
+
+### BookItem.vue
+Individual book display component for search results with tagging functionality.
+- **Props**:
+  - `book` (Object, required) - Book object from Google Books API
+- **Features**:
+  - Book cover display with fallback for missing covers
+  - Book details (title, authors, publication date, publisher, pages)
+  - Star rating display
+  - Truncated description
+  - Preview and info links
+  - **Tagging functionality**:
+    - Add tags to books (authenticated users only)
+    - View existing tags on books
+    - Remove tags (own tags only)
+    - Tag form with validation
+    - Success/error feedback
+  - Responsive design
+  - Hover effects and animations
+
+### TaggedBooks.vue
+Component for displaying user's tagged books on the homepage.
+- **Features**:
+  - Display all books tagged by the current user
+  - Show book titles and associated tags
+  - Navigate to detailed book page by clicking "View Details"
+  - Remove all tags from a book
+  - Loading states and error handling
+  - Empty state with link to search page
+  - Responsive grid layout
+- **Authentication**: Requires user to be logged in
+- **API Integration**: Uses Google Books API for book details and tagging API for tag management
+- **Navigation**: "View Details" button navigates to `/book/:id` route
+
+## Tag Management Components
+
+### useTags.js (Composable)
+Composable for managing tag state and operations.
+- **Features**:
+  - Global tag state management
+  - Load user tags and book-specific tags
+  - Add, remove, and toggle tag privacy
+  - Load public tags for search suggestions
+  - Computed properties for tagged books and user labels
+  - Error handling and loading states
+- **Methods**:
+  - `loadUserTags(userId)` - Load all tags for a user
+  - `loadBookTags(userId, bookId)` - Load tags for a specific book
+  - `addTag(userId, label, bookId)` - Add a new tag
+  - `removeTag(tagId)` - Remove a tag
+  - `toggleTagPrivacy(tagId, isPrivate)` - Change tag privacy
+  - `getAllPublicTags()` - Load all public tags for search suggestions
+- **Computed Properties**:
+  - `getTaggedBooks` - Books grouped by book ID with their tags
+  - `getUserLabels` - Unique labels with usage counts
 
 ## API Integration
 
@@ -236,6 +374,22 @@ The application uses a `useUsers` composable to manage user data and display use
 - `POST /api/Notifying/_getUnreadNotificationsByUser` - Get unread notifications for a user
 - `POST /api/Notifying/_getAllNotifications` - Get all notifications in the system
 
+### Google Books API Endpoints Used:
+- `GET https://www.googleapis.com/books/v1/volumes` - Search for books by query
+- `GET https://www.googleapis.com/books/v1/volumes/{id}` - Get detailed information about a specific book
+
+### Tagging Endpoints Used:
+- `POST /api/Tagging/addTag` - Add a tag to a book
+- `POST /api/Tagging/removeTag` - Remove a tag from a book
+- `POST /api/Tagging/markPrivate` - Mark a tag as private
+- `POST /api/Tagging/markPublic` - Mark a tag as public
+- `POST /api/Tagging/_getTagsByBook` - Get all tags for a specific book
+- `POST /api/Tagging/_getTagsByUser` - Get all tags created by a user
+- `POST /api/Tagging/_getLabelsByUser` - Get all labels created by a user
+- `POST /api/Tagging/_getBooksByLabel` - Get books with specific labels
+- `POST /api/Tagging/_getAllPublicTags` - Get all public tags
+- `POST /api/Tagging/_getAllTags` - Get all tags in the system
+
 Components will be organized by feature:
 - Authentication components ✅
 - Post components ✅
@@ -243,4 +397,5 @@ Components will be organized by feature:
 - Upvote components ✅
 - Profile components ✅
 - Notification components ✅
+- Book search components ✅
 - Tag components

@@ -6,6 +6,7 @@ import Forum from './views/Forum.vue'
 import Search from './views/Search.vue'
 import Profile from './views/Profile.vue'
 import PostDetail from './views/PostDetail.vue'
+import BookDetail from './views/BookDetail.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -34,6 +35,11 @@ const router = createRouter({
       path: '/post/:id',
       name: 'post-detail',
       component: PostDetail
+    },
+    {
+      path: '/book/:id',
+      name: 'BookDetail',
+      component: BookDetail
     }
   ]
 })

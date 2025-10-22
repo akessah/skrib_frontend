@@ -209,6 +209,112 @@ class ApiService {
   async getAllNotifications() {
     return this.makeRequest('/api/Notifying/_getAllNotifications', 'POST', {});
   }
+
+  // Google Books API
+  async searchBooks(query, maxResults = 20, startIndex = 0) {
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&startIndex=${startIndex}&printType=books`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Google Books API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error searching books:', error);
+      throw error;
+    }
+  }
+
+  async getBookDetails(bookId) {
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/books/v1/volumes/${bookId}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Google Books API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching book details:', error);
+      throw error;
+    }
+  }
+
+  // Tagging endpoints
+  async addTag(user, label, book) {
+    return this.makeRequest('/api/Tagging/addTag', 'POST', {
+      user,
+      label,
+      book
+    });
+  }
+
+  async removeTag(tag) {
+    return this.makeRequest('/api/Tagging/removeTag', 'POST', {
+      tag
+    });
+  }
+
+  async markTagPrivate(tag) {
+    return this.makeRequest('/api/Tagging/markPrivate', 'POST', {
+      tag
+    });
+  }
+
+  async markTagPublic(tag) {
+    return this.makeRequest('/api/Tagging/markPublic', 'POST', {
+      tag
+    });
+  }
+
+  async getTagsByBook(user, book) {
+    return this.makeRequest('/api/Tagging/_getTagsByBook', 'POST', {
+      user,
+      book
+    });
+  }
+
+  async getLabelsByBook(user, book) {
+    return this.makeRequest('/api/Tagging/_getLabelsByBook', 'POST', {
+      user,
+      book
+    });
+  }
+
+  async getBooksByLabel(user, labels, type) {
+    return this.makeRequest('/api/Tagging/_getBooksByLabel', 'POST', {
+      user,
+      labels,
+      type
+    });
+  }
+
+  async getTagsByUser(user) {
+    return this.makeRequest('/api/Tagging/_getTagsByUser', 'POST', {
+      user
+    });
+  }
+
+  async getLabelsByUser(user) {
+    return this.makeRequest('/api/Tagging/_getLabelsByUser', 'POST', {
+      user
+    });
+  }
+
+  async getAllPublicTags() {
+    return this.makeRequest('/api/Tagging/_getAllPublicTags', 'POST', {});
+  }
+
+  async getAllTags() {
+    return this.makeRequest('/api/Tagging/_getAllTags', 'POST', {});
+  }
 }
 
 export default new ApiService();

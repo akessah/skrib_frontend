@@ -17,6 +17,9 @@
           <h2>Welcome back, {{ currentUsername }}!</h2>
         </div>
         
+        <!-- Tagged Books Section -->
+        <TaggedBooks />
+        
         <div class="feature-cards">
           <div class="feature-card">
             <h3>📝 Create Posts</h3>
@@ -40,11 +43,13 @@
 import { onMounted } from 'vue';
 import { useAuth } from '../composables/useAuth.js';
 import AuthForm from '../components/AuthForm.vue';
+import TaggedBooks from '../components/TaggedBooks.vue';
 
 export default {
   name: 'Home',
   components: {
-    AuthForm
+    AuthForm,
+    TaggedBooks
   },
   setup() {
     const { currentUsername, isAuthenticated, initializeAuth } = useAuth();
