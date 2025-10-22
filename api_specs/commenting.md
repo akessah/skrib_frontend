@@ -1,72 +1,34 @@
 # API Specification: Commenting Concept
 
-**Purpose:** associate some text with another artifact (usually itself textual) that remarks on, augments or explains it
+**Purpose:** associate user-generated text with an item, allowing for remarks or explanations.
 
 ---
 
 ## API Endpoints
 
-### POST /api/Commenting/addComment
+### POST /api/Commenting/createComment
 
-**Description:** Adds a new comment to a specified target by an author.
+**Description:** Creates a new comment on a specified item by a user.
 
 **Requirements:**
-- author exists, target exists
+- true (assumes valid user, body, and item)
 
 **Effects:**
-- creates a new Comment `c`
-- sets `c`'s author to `author`, target to `target`, text to `text`, creation time to current time
-- `isDeleted` to false
-- returns `c` as `comment`
+- A new comment is created with a unique ID, associated with the item, user, and body, and added to the comments collection. The new comment's ID is returned.
 
 **Request Body:**
 ```json
 {
-  "author": "string",
-  "target": "string",
-  "text": "string"
+  "user": "ID",
+  "body": "string",
+  "item": "ID"
 }
 ```
 
 **Success Response Body (Action):**
 ```json
 {
-  "comment": "string"
-}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
-
----
-
-### POST /api/Commenting/editComment
-
-**Description:** Edits the text of an existing comment.
-
-**Requirements:**
-- comment exists and `isDeleted` is false
-
-**Effects:**
-- updates `comment`'s text to `newText`
-- returns `comment`
-
-**Request Body:**
-```json
-{
-  "comment": "string",
-  "newText": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{
-  "comment": "string"
+  "comment": "ID"
 }
 ```
 
@@ -81,18 +43,18 @@
 
 ### POST /api/Commenting/deleteComment
 
-**Description:** Marks an existing comment as deleted.
+**Description:** Deletes an existing comment from the collection.
 
 **Requirements:**
-- comment exists and `isDeleted` is false
+- The `comment` ID must refer to an existing comment.
 
 **Effects:**
-- sets `comment`'s `isDeleted` to true
+- The specified comment is removed from the comments collection.
 
 **Request Body:**
 ```json
 {
-  "comment": "string"
+  "comment": "ID"
 }
 ```
 
@@ -110,20 +72,52 @@
 
 ---
 
-### POST /api/Commenting/_getCommentsForTarget
+### POST /api/Commenting/editComment
 
-**Description:** Retrieves all non-deleted comments for a specific target.
+**Description:** Edits the body of an existing comment.
 
 **Requirements:**
-- target exists
+- The `comment` ID must refer to an existing comment.
 
 **Effects:**
-- returns all non-deleted comments for `target`, along with their author, text, and creation time
+- The body of the specified comment is replaced with `newBody`.
 
 **Request Body:**
 ```json
 {
-  "target": "string"
+  "comment": "ID",
+  "newBody": "string"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Commenting/_getCommentsByAuthor
+
+**Description:** Retrieves all comments created by a specific author.
+
+**Requirements:**
+- The `author` ID must refer to an existing user.
+
+**Effects:**
+- Returns an array of comment objects authored by the given `author`.
+
+**Request Body:**
+```json
+{
+  "author": "ID"
 }
 ```
 
@@ -131,10 +125,84 @@
 ```json
 [
   {
-    "comment": "string",
-    "author": "string",
-    "text": "string",
-    "creationTime": "number"
+    "_id": "ID",
+    "parent": "ID",
+    "author": "ID",
+    "body": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Commenting/_getCommentsByParent
+
+**Description:** Retrieves all comments associated with a specific parent item.
+
+**Requirements:**
+- The `parent` ID must refer to an existing item.
+
+**Effects:**
+- Returns an array of comment objects associated with the given `parent` item.
+
+**Request Body:**
+```json
+{
+  "parent": "ID"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "ID",
+    "parent": "ID",
+    "author": "ID",
+    "body": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Commenting/_getAllComments
+
+**Description:** Retrieves all comments stored in the database.
+
+**Requirements:**
+- true
+
+**Effects:**
+- Returns an array of all comment objects.
+
+**Request Body:**
+```json
+{}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "ID",
+    "parent": "ID",
+    "author": "ID",
+    "body": "string"
   }
 ]
 ```

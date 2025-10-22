@@ -1,68 +1,35 @@
-
 # API Specification: Tagging Concept
 
-**Purpose:** categorize items with keywords for easier organization and retrieval
+**Purpose:** to label books to assist in searching and organization
 
 ---
 
 ## API Endpoints
 
-### POST /api/Tagging/createTag
-
-**Description:** Creates a new tag with a unique name.
-
-**Requirements:**
-- no Tag with `name` already exists
-
-**Effects:**
-- creates a new Tag `t`
-- sets `t`'s name to `name`
-- returns `t` as `tag`
-
-**Request Body:**
-```json
-{
-  "name": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{
-  "tag": "string"
-}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
-
----
-
 ### POST /api/Tagging/addTag
 
-**Description:** Associates an existing tag with an item.
+**Description:** Adds a tag to a book.
 
 **Requirements:**
-- item exists, tag exists, item does not already have tag
+- no user tag with label already associated with book
 
 **Effects:**
-- associates `tag` with `item`
+- adds a tag from user with label associated with book to Tags set; default is public (private is false)
 
 **Request Body:**
 ```json
 {
-  "item": "string",
-  "tag": "string"
+  "user": "string",
+  "label": "string",
+  "book": "string"
 }
 ```
 
 **Success Response Body (Action):**
 ```json
-{}
+{
+  "tag": "string"
+}
 ```
 
 **Error Response Body:**
@@ -76,18 +43,17 @@
 
 ### POST /api/Tagging/removeTag
 
-**Description:** Dissociates an existing tag from an item.
+**Description:** Removes a tag from a book.
 
 **Requirements:**
-- item exists, tag exists, item currently has tag
+- tag exists
 
 **Effects:**
-- dissociates `tag` from `item`
+- removes tag from Tags set
 
 **Request Body:**
 ```json
 {
-  "item": "string",
   "tag": "string"
 }
 ```
@@ -106,15 +72,15 @@
 
 ---
 
-### POST /api/Tagging/_getItemsByTag
+### POST /api/Tagging/markPrivate
 
-**Description:** Retrieves all items associated with a specific tag.
+**Description:** Marks a tag as private (only searchable to user).
 
 **Requirements:**
 - tag exists
 
 **Effects:**
-- returns all items associated with `tag`
+- sets private flag to true
 
 **Request Body:**
 ```json
@@ -123,11 +89,79 @@
 }
 ```
 
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Tagging/markPublic
+
+**Description:** Marks a tag as public (searchable to all).
+
+**Requirements:**
+- tag exists
+
+**Effects:**
+- sets private flag to false
+
+**Request Body:**
+```json
+{
+  "tag": "string"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Tagging/_getTagsByBook
+
+**Description:** Returns all public tags associated with book along with private tags created by user associated with book.
+
+**Requirements:**
+- book exists
+- user exists
+
+**Effects:**
+- returns all public tags associated with book along with private tags created by user associated with book
+
+**Request Body:**
+```json
+{
+  "user": "string",
+  "book": "string"
+}
+```
+
 **Success Response Body (Query):**
 ```json
 [
   {
-    "item": "string"
+    "_id": "string",
+    "user": "string",
+    "label": "string",
+    "book": "string",
+    "private": "boolean"
   }
 ]
 ```
@@ -141,20 +175,22 @@
 
 ---
 
-### POST /api/Tagging/_getTagsForItem
+### POST /api/Tagging/_getLabelsByBook
 
-**Description:** Retrieves all tags associated with a specific item.
+**Description:** Returns all labels of public tags associated with book along with private tags created by user associated with book.
 
 **Requirements:**
-- item exists
+- book exists
+- user exists
 
 **Effects:**
-- returns all tags associated with `item`, including their names
+- returns all labels of public tags associated with book along with private tags created by user associated with book.
 
 **Request Body:**
 ```json
 {
-  "item": "string"
+  "user": "string",
+  "book": "string"
 }
 ```
 
@@ -162,8 +198,199 @@
 ```json
 [
   {
-    "tag": "string",
-    "name": "string"
+    "label": "string",
+    "count": "number"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Tagging/_getBooksByLabel
+
+**Description:** Returns all books with every one of the labels in labels, including labels of private tags by user.
+
+**Requirements:**
+- user exists
+- labels array is not empty
+- type is either 'intersect' or 'union'
+
+**Effects:**
+- returns all books with every one of the labels in labels, including labels of private tags by user
+
+**Request Body:**
+```json
+{
+  "user": "string",
+  "labels": [
+    "string"
+  ],
+  "type": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "book": "string",
+    "tagCount": "number"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Tagging/_getTagsByUser
+
+**Description:** Returns all tags created by user.
+
+**Requirements:**
+- user exists
+
+**Effects:**
+- returns all tags created by user
+
+**Request Body:**
+```json
+{
+  "user": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "string",
+    "user": "string",
+    "label": "string",
+    "book": "string",
+    "private": "boolean"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Tagging/_getLabelsByUser
+
+**Description:** Returns all labels created by user.
+
+**Requirements:**
+- user exists
+
+**Effects:**
+- returns all labels created by user
+
+**Request Body:**
+```json
+{
+  "user": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "label": "string",
+    "count": "number"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Tagging/_getAllPublicTags
+
+**Description:** Returns all public tags in database.
+
+**Requirements:**
+- true
+
+**Effects:**
+- returns all public tags in database
+
+**Request Body:**
+```json
+{}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "string",
+    "user": "string",
+    "label": "string",
+    "book": "string",
+    "private": "boolean"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Tagging/_getAllTags
+
+**Description:** Returns all tags in database.
+
+**Requirements:**
+- true
+
+**Effects:**
+- returns all tags in database
+
+**Request Body:**
+```json
+{}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "string",
+    "user": "string",
+    "label": "string",
+    "book": "string",
+    "private": "boolean"
   }
 ]
 ```

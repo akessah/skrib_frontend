@@ -1,7 +1,6 @@
-
 # API Specification: Authentication Concept
 
-**Purpose:** manage user identities and provide a mechanism for users to prove their identity
+**Purpose:** Manage user accounts, including registration, authentication, and profile updates.
 
 ---
 
@@ -12,13 +11,11 @@
 **Description:** Registers a new user with a unique username and password.
 
 **Requirements:**
-- no User with `username` already exists
+- The provided username must not already be in use.
 
 **Effects:**
-- creates a new User `u`
-- sets `u`'s username to `username`, password to `password` (hashed)
-- `isActive` to true
-- returns `u` as `user`
+- A new user account is created with the given username and password, and added to the user set.
+- The unique ID of the newly created user is returned.
 
 **Request Body:**
 ```json
@@ -44,15 +41,78 @@
 
 ---
 
-### POST /api/Authentication/login
+### POST /api/Authentication/deleteUser
 
-**Description:** Authenticates a user with their username and password.
+**Description:** Deletes an existing registered user account.
 
 **Requirements:**
-- User with `username` exists and `password` matches
+- The specified user must exist.
 
 **Effects:**
-- returns the authenticated `user`
+- The user account is removed from the user set.
+
+**Request Body:**
+```json
+{
+  "user": "string"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Authentication/changePassword
+
+**Description:** Changes the password for an existing user account.
+
+**Requirements:**
+- The specified user must exist.
+
+**Effects:**
+- The password associated with the user is updated to the `newPassword`.
+
+**Request Body:**
+```json
+{
+  "user": "string",
+  "newPassword": "string"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Authentication/authenticate
+
+**Description:** Authenticates a user given their username and password.
+
+**Requirements:**
+- A user with the provided username and password must exist.
+
+**Effects:**
+- If successful, the ID of the authenticated user is returned.
 
 **Request Body:**
 ```json
@@ -78,90 +138,28 @@
 
 ---
 
-### POST /api/Authentication/logout
+### POST /api/Authentication/_getAllUsers
 
-**Description:** Invalidates the current session for a specified user.
+**Description:** Retrieves all registered users.
 
 **Requirements:**
-- user exists and is currently authenticated (concept implicitly handles sessions)
+- true
 
 **Effects:**
-- invalidates the current session for `user`
+- Returns a list of all user objects, each containing their ID, username, and password.
 
 **Request Body:**
-```json
-{
-  "user": "string"
-}
-```
-
-**Success Response Body (Action):**
 ```json
 {}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
-
----
-
-### POST /api/Authentication/_deactivateUser
-
-**Description:** Deactivates a user account, setting their `isActive` status to false.
-
-**Requirements:**
-- user exists
-
-**Effects:**
-- sets `user`'s `isActive` to false
-
-**Request Body:**
-```json
-{
-  "user": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
-
----
-
-### POST /api/Authentication/_getUserByUsername
-
-**Description:** Retrieves a user by their username.
-
-**Requirements:**
-- User with `username` exists and is active
-
-**Effects:**
-- returns the `user` identified by `username`
-
-**Request Body:**
-```json
-{
-  "username": "string"
-}
 ```
 
 **Success Response Body (Query):**
 ```json
 [
   {
-    "user": "string"
+    "_id": "string",
+    "username": "string",
+    "password": "string"
   }
 ]
 ```

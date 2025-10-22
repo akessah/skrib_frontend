@@ -9,6 +9,19 @@
           <router-link to="/" class="nav-link">Home</router-link>
           <router-link to="/forum" class="nav-link">Forum</router-link>
           <router-link to="/search" class="nav-link">Search</router-link>
+          <router-link v-if="isAuthenticated" to="/profile" class="nav-link">Profile</router-link>
+          <div v-if="isAuthenticated" class="notification-bell" @click="toggleNotifications">
+            <span class="bell-icon">🔔</span>
+            <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
+          </div>
+        </div>
+        
+        <!-- Notification Dropdown -->
+        <div v-if="showNotifications && isAuthenticated" class="notification-dropdown">
+          <NotificationList 
+            :user-id="currentUser"
+            @close="showNotifications = false"
+          />
         </div>
       </nav>
     </header>
@@ -19,8 +32,40 @@
 </template>
 
 <script>
+import { onMounted, ref } from 'vue';
+import { useAuth } from './composables/useAuth.js';
+import { useNotifications } from './composables/useNotifications.js';
+import NotificationList from './components/NotificationList.vue';
+
 export default {
-  name: 'App'
+  name: 'App',
+  components: {
+    NotificationList
+  },
+  setup() {
+    const { currentUser, isAuthenticated, initializeAuth } = useAuth();
+    const { unreadCount, loadUnreadNotifications } = useNotifications();
+    const showNotifications = ref(false);
+    
+    const toggleNotifications = () => {
+      showNotifications.value = !showNotifications.value;
+      if (showNotifications.value && currentUser.value) {
+        loadUnreadNotifications(currentUser.value);
+      }
+    };
+    
+    onMounted(() => {
+      initializeAuth();
+    });
+    
+    return {
+      currentUser,
+      isAuthenticated,
+      unreadCount,
+      showNotifications,
+      toggleNotifications
+    };
+  }
 }
 </script>
 
@@ -54,6 +99,7 @@ nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .nav-brand a {
@@ -88,6 +134,48 @@ nav {
   color: #42b983;
   border-bottom: 2px solid #42b983;
   padding-bottom: 0.25rem;
+}
+
+.notification-bell {
+  position: relative;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.notification-bell:hover {
+  background-color: #f8f9fa;
+}
+
+.bell-icon {
+  font-size: 1.2rem;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 400px;
+  max-width: 90vw;
+  z-index: 1000;
+  margin-top: 0.5rem;
 }
 
 main {

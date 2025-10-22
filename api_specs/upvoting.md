@@ -1,7 +1,6 @@
-
 # API Specification: Upvoting Concept
 
-**Purpose:** use crowd-sourced approval to rank items
+**Purpose:** to rank items by popularity
 
 ---
 
@@ -9,57 +8,19 @@
 
 ### POST /api/Upvoting/upvote
 
-**Description:** Records an upvote by a user for an item and increments the item's upvote count.
+**Description:** Adds a user's upvote to an item.
 
 **Requirements:**
-- user exists, item exists, user has not already upvoted this item
+- No vote by `user` for `item` already exists.
 
 **Effects:**
-- creates a new Upvote `u`
-- sets `u`'s user to `user`, item to `item`, timestamp to current time
-- increments `item`'s `upvoteCount`
-- returns `u` as `upvote`
+- A vote by `user` for `item` is added to the `Votes` set.
 
 **Request Body:**
 ```json
 {
-  "user": "string",
-  "item": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{
-  "upvote": "string"
-}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
-
----
-
-### POST /api/Upvoting/removeUpvote
-
-**Description:** Removes an existing upvote by a user for an item and decrements the item's upvote count.
-
-**Requirements:**
-- user exists, item exists, user has upvoted this item
-
-**Effects:**
-- deletes the Upvote by `user` for `item`
-- decrements `item`'s `upvoteCount`
-
-**Request Body:**
-```json
-{
-  "user": "string",
-  "item": "string"
+  "user": "ID",
+  "item": "ID"
 }
 ```
 
@@ -77,20 +38,52 @@
 
 ---
 
-### POST /api/Upvoting/_getUpvoteCount
+### POST /api/Upvoting/unvote
 
-**Description:** Retrieves the total number of upvotes for a specific item.
+**Description:** Removes a user's upvote from an item.
 
 **Requirements:**
-- item exists
+- A vote by `user` for `item` must exist.
 
 **Effects:**
-- returns the total `upvoteCount` for `item`
+- The vote by `user` for `item` is removed from the `Votes` set.
 
 **Request Body:**
 ```json
 {
-  "item": "string"
+  "user": "ID",
+  "item": "ID"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Upvoting/_getUpvotessByUser
+
+**Description:** Returns all votes made by a specific user.
+
+**Requirements:**
+- true
+
+**Effects:**
+- Returns all votes from `user`.
+
+**Request Body:**
+```json
+{
+  "user": "ID"
 }
 ```
 
@@ -98,7 +91,9 @@
 ```json
 [
   {
-    "count": "number"
+    "_id": "ID",
+    "user": "ID",
+    "target": "ID"
   }
 ]
 ```
@@ -112,20 +107,20 @@
 
 ---
 
-### POST /api/Upvoting/_getUsersWhoUpvoted
+### POST /api/Upvoting/_getUpvotesByItem
 
-**Description:** Retrieves the set of users who have upvoted a specific item.
+**Description:** Returns all votes associated with a specific item.
 
 **Requirements:**
-- item exists
+- true
 
 **Effects:**
-- returns the set of users who have upvoted `item`
+- Returns all votes on an `item`.
 
 **Request Body:**
 ```json
 {
-  "item": "string"
+  "item": "ID"
 }
 ```
 
@@ -133,12 +128,15 @@
 ```json
 [
   {
-    "user": "string"
+    "_id": "ID",
+    "user": "ID",
+    "target": "ID"
   }
 ]
 ```
 
 **Error Response Body:**
+
 ```json
 {
   "error": "string"
@@ -147,34 +145,34 @@
 
 ---
 
-### POST /api/Upvoting/_hasUserUpvoted
+### POST /api/Upvoting/_getAllUpvotes
 
-**Description:** Checks if a specific user has upvoted a specific item.
+**Description:** Returns all votes in the system.
 
 **Requirements:**
-- user exists, item exists
+- true
 
 **Effects:**
-- returns true if `user` has upvoted `item`, false otherwise
+- Returns all votes.
 
 **Request Body:**
 ```json
-{
-  "user": "string",
-  "item": "string"
-}
+{}
 ```
 
 **Success Response Body (Query):**
 ```json
 [
   {
-    "hasUpvoted": "boolean"
+    "_id": "ID",
+    "user": "ID",
+    "target": "ID"
   }
 ]
 ```
 
 **Error Response Body:**
+
 ```json
 {
   "error": "string"

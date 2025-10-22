@@ -1,6 +1,9 @@
+
 # API Specification: Posting Concept
 
-**Purpose:** allow users to create and manage textual content items
+**Purpose:** to allow users to upload content, generally to ask for book recommendations
+
+**Principle:** A user creates and publishes a post which can then be seen publically.
 
 ---
 
@@ -8,57 +11,19 @@
 
 ### POST /api/Posting/createPost
 
-**Description:** Creates a new post with specified author and text.
+**Description:** Creates a post with a specified user and body.
 
 **Requirements:**
-- author exists
+- true
 
 **Effects:**
-- creates a new Post `p`
-- sets `p`'s author to `author`, text to `text`, creation time to current time
-- `isDeleted` to false
-- returns `p` as `post`
+- creates a post with body by user and adds it to Posts set
 
 **Request Body:**
 ```json
 {
-  "author": "string",
-  "text": "string"
-}
-```
-
-**Success Response Body (Action):**
-```json
-{
-  "post": "string"
-}
-```
-
-**Error Response Body:**
-```json
-{
-  "error": "string"
-}
-```
-
----
-
-### POST /api/Posting/editPost
-
-**Description:** Edits the text of an existing post.
-
-**Requirements:**
-- post exists and `isDeleted` is false
-
-**Effects:**
-- updates `post`'s text to `newText`, `lastEditedTime` to current time
-- returns `post`
-
-**Request Body:**
-```json
-{
-  "post": "string",
-  "newText": "string"
+  "user": "string",
+  "body": "string"
 }
 ```
 
@@ -80,13 +45,13 @@
 
 ### POST /api/Posting/deletePost
 
-**Description:** Marks an existing post as deleted.
+**Description:** Deletes an existing post from the system.
 
 **Requirements:**
-- post exists and `isDeleted` is false
+- post exists
 
 **Effects:**
-- sets `post`'s `isDeleted` to true
+- removes post from Posts set
 
 **Request Body:**
 ```json
@@ -109,34 +74,27 @@
 
 ---
 
-### POST /api/Posting/_getPost
+### POST /api/Posting/editPost
 
-**Description:** Retrieves the details of a specific post.
+**Description:** Edits the body of an existing post.
 
 **Requirements:**
 - post exists
 
 **Effects:**
-- returns the author, text, creation time, last edited time, and deletion status of `post`
+- replaces body of post with newBody
 
 **Request Body:**
 ```json
 {
-  "post": "string"
+  "post": "string",
+  "newBody": "string"
 }
 ```
 
-**Success Response Body (Query):**
+**Success Response Body (Action):**
 ```json
-[
-  {
-    "author": "string",
-    "text": "string",
-    "creationTime": "number",
-    "lastEditedTime": "number",
-    "isDeleted": "boolean"
-  }
-]
+{}
 ```
 
 **Error Response Body:**
@@ -150,13 +108,13 @@
 
 ### POST /api/Posting/_getPostsByAuthor
 
-**Description:** Retrieves all non-deleted posts by a specific author.
+**Description:** Returns all posts created by a specific author.
 
 **Requirements:**
-- author exists
+- true
 
 **Effects:**
-- returns all non-deleted posts by `author`, along with their text and creation time
+- returns posts authored by user
 
 **Request Body:**
 ```json
@@ -169,9 +127,44 @@
 ```json
 [
   {
-    "post": "string",
-    "text": "string",
-    "creationTime": "number"
+    "_id": "string",
+    "author": "string",
+    "body": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+
+---
+
+### POST /api/Posting/_getAllPosts
+
+**Description:** Returns all posts currently stored in the database.
+
+**Requirements:**
+- true
+
+**Effects:**
+- returns all posts in db
+
+**Request Body:**
+```json
+{}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "_id": "string",
+    "author": "string",
+    "body": "string"
   }
 ]
 ```

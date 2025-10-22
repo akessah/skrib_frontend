@@ -4,6 +4,8 @@ import App from './App.vue'
 import Home from './views/Home.vue'
 import Forum from './views/Forum.vue'
 import Search from './views/Search.vue'
+import Profile from './views/Profile.vue'
+import PostDetail from './views/PostDetail.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -22,6 +24,16 @@ const router = createRouter({
       path: '/search',
       name: 'search',
       component: Search
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: Profile
+    },
+    {
+      path: '/post/:id',
+      name: 'post-detail',
+      component: PostDetail
     }
   ]
 })
