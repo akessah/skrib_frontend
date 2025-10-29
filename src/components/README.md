@@ -326,9 +326,90 @@ Composable for managing tag state and operations.
   - `getTaggedBooks` - Books grouped by book ID with their tags
   - `getUserLabels` - Unique labels with usage counts
 
+## Shelving Components
+
+### useShelving.js (Composable)
+Composable for managing book shelving state and operations.
+- **Features**:
+  - Global shelf state management
+  - Load user shelves and book-specific shelf information
+  - Add, remove, and change book shelf status
+  - Computed properties for shelf organization
+  - Error handling and loading states
+- **Shelf Status Constants**:
+  - `WANT_TO_READ` (0) - Books user wants to read
+  - `CURRENTLY_READING` (1) - Books user is currently reading
+  - `READ` (2) - Books user has finished reading
+  - `DID_NOT_FINISH` (3) - Books user did not finish
+- **Methods**:
+  - `loadUserShelves(userId)` - Load all shelves for a user
+  - `loadBookShelves(bookId)` - Load shelf information for a specific book
+  - `getUserShelfForBook(userId, bookId)` - Get user's shelf status for a book
+  - `addBookToShelf(userId, status, bookId)` - Add book to a shelf
+  - `removeBookFromShelf(shelfId)` - Remove book from shelf
+  - `changeBookStatus(shelfId, newStatus)` - Move book to different shelf
+- **Computed Properties**:
+  - `getBooksByStatus` - Books organized by shelf status
+  - `getShelfCounts` - Count of books in each shelf
+  - `getTotalShelvedBooks` - Total number of shelved books
+
+### ShelfButton.vue
+Interactive component for managing book shelf status.
+- **Props**:
+  - `bookId` (String, required) - ID of the book to shelf
+- **Features**:
+  - Add book to any shelf (Want to Read, Currently Reading, Read, Did Not Finish)
+  - Change book's shelf status
+  - Remove book from shelf
+  - Real-time status updates
+  - Authentication-aware (shows login prompt if not authenticated)
+  - Success/error feedback
+- **Shelf Options**:
+  - 📚 Want to Read
+  - 📖 Currently Reading
+  - ✅ Read
+  - ❌ Did Not Finish
+
+### UserShelves.vue
+Component for displaying user's organized book shelves on homepage.
+- **Features**:
+  - Display all user's shelves organized by status
+  - Show book titles, authors, and shelf counts
+  - Quick actions to view book details or remove from shelf
+  - Empty state with search link when no books shelved
+  - Loading and error states
+  - Responsive grid layout
+- **Shelf Sections**:
+  - Each shelf shows books with title, author, and action buttons
+  - "View Details" button navigates to book detail page
+  - Remove button with confirmation dialog
+  - Book count display for each shelf
+
+## Page Components
+
+### Home.vue
+Homepage with user welcome message, book shelves, and tagged books display.
+- **Features**:
+  - Welcome message with username
+  - **User Shelves**: Display of user's organized book shelves (Want to Read, Currently Reading, Read, Did Not Finish)
+  - **Tagged Books**: Display of user's tagged books
+  - Authentication prompt for non-logged-in users
+  - Feature cards highlighting app capabilities
+- **Route**: `/` - Homepage
+- **Authentication**: Shows different content based on authentication status
+- **Components Used**: `AuthForm`, `UserShelves`, `TaggedBooks`
+
 ## API Integration
 
-All components use the `apiService` from `../services/api.js` to communicate with the backend API endpoints defined in `api_specs/posting.md` and `api_specs/authentication.md`.
+All components use the `apiService` from `../services/api.js` to communicate with the backend API endpoints defined in:
+- `api_specs/posting.md` - Post management
+- `api_specs/authentication.md` - User authentication
+- `api_specs/commenting.md` - Comment system
+- `api_specs/upvoting.md` - Upvoting system
+- `api_specs/notifying.md` - Notification system
+- `api_specs/tagging.md` - Book tagging
+- `api_specs/shelving.md` - Book shelving
+- Google Books API - External book data
 
 ## Authentication
 

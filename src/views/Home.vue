@@ -17,6 +17,9 @@
           <h2>Welcome back, {{ currentUsername }}!</h2>
         </div>
         
+        <!-- User Shelves Section -->
+        <UserShelves />
+        
         <!-- Tagged Books Section -->
         <TaggedBooks />
         
@@ -43,12 +46,14 @@
 import { onMounted } from 'vue';
 import { useAuth } from '../composables/useAuth.js';
 import AuthForm from '../components/AuthForm.vue';
+import UserShelves from '../components/UserShelves.vue';
 import TaggedBooks from '../components/TaggedBooks.vue';
 
 export default {
   name: 'Home',
   components: {
     AuthForm,
+    UserShelves,
     TaggedBooks
   },
   setup() {

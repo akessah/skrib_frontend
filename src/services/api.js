@@ -23,11 +23,22 @@ class ApiService {
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
       
-      const data = await response.json();
-      console.log('Response data:', data);
+      // Get response text first to handle non-JSON responses
+      const responseText = await response.text();
+      console.log('Raw response text:', responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed response data:', data);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        console.error('Response text that failed to parse:', responseText);
+        throw new Error(`Invalid JSON response from server: ${responseText.substring(0, 100)}...`);
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'An error occurred');
+        throw new Error(data.error || `Server error (${response.status}): ${responseText}`);
       }
 
       return data;
@@ -314,6 +325,51 @@ class ApiService {
 
   async getAllTags() {
     return this.makeRequest('/api/Tagging/_getAllTags', 'POST', {});
+  }
+
+  // Shelving endpoints
+  async addBookToShelf(user, status, book) {
+    return this.makeRequest('/api/Shelving/addBook', 'POST', {
+      user,
+      status,
+      book
+    });
+  }
+
+  async removeBookFromShelf(shelf) {
+    return this.makeRequest('/api/Shelving/removeBook', 'POST', {
+      shelf
+    });
+  }
+
+  async changeBookStatus(shelf, newStatus) {
+    return this.makeRequest('/api/Shelving/changeStatus', 'POST', {
+      shelf,
+      newStatus
+    });
+  }
+
+  async getUserShelfByBook(user, book) {
+    return this.makeRequest('/api/Shelving/_getUserShelfByBook', 'POST', {
+      user,
+      book
+    });
+  }
+
+  async getShelvesByBook(book) {
+    return this.makeRequest('/api/Shelving/_getShelvesByBook', 'POST', {
+      book
+    });
+  }
+
+  async getBooksByUser(user) {
+    return this.makeRequest('/api/Shelving/_getBooksByUser', 'POST', {
+      user
+    });
+  }
+
+  async getAllShelves() {
+    return this.makeRequest('/api/Shelving/_getAllShelves', 'POST', {});
   }
 }
 

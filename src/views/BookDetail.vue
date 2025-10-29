@@ -96,6 +96,12 @@
         <div class="description-content" v-html="book.volumeInfo.description"></div>
       </div>
       
+      <!-- Shelving Section -->
+      <div v-if="isAuthenticated" class="shelving-section">
+        <h3>📚 Add to Your Shelf</h3>
+        <ShelfButton :book-id="book.id" />
+      </div>
+      
       <!-- Tags Section -->
       <div v-if="bookTags.length > 0 || isAuthenticated" class="tags-section">
         <h3>Tags</h3>
@@ -187,14 +193,18 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuth } from '../composables/useAuth.js';
 import { useTags } from '../composables/useTags.js';
+import ShelfButton from '../components/ShelfButton.vue';
 import apiService from '../services/api.js';
 
 export default {
   name: 'BookDetail',
+  components: {
+    ShelfButton
+  },
   setup() {
     const route = useRoute();
     const { currentUser, isAuthenticated } = useAuth();
-    const { loadBookTags, addTag, removeTag } = useTags();
+    const { loadBookTags, addTag, removeTag, getBookTags } = useTags();
     
     const book = ref(null);
     const isLoading = ref(true);
@@ -307,9 +317,64 @@ export default {
       return stars;
     };
     
-    onMounted(() => {
-      loadBookDetails();
+    onMounted(async () => {
+      await loadBookDetails();
+      // Auto-add category tags from Google Books categories
+      await addAutoCategoryTags();
     });
+    
+    const addAutoCategoryTags = async () => {
+      try {
+        if (!isAuthenticated.value || !currentUser.value || !book.value) return;
+        
+        const categories = book.value?.volumeInfo?.categories || [];
+        if (!Array.isArray(categories) || categories.length === 0) {
+          console.log('No categories found for auto-tagging');
+          return;
+        }
+
+        console.log('Auto-adding category tags from Google Books categories:', categories);
+
+        // Build a quick lookup of existing labels (case-insensitive)
+        const existingLabels = new Set(
+          (bookTags.value || []).map(t => (t.label || '').toLowerCase())
+        );
+
+        let addedAny = false;
+        for (const rawCategory of categories) {
+          const trimmed = (rawCategory || '').trim();
+          if (!trimmed) continue;
+          const label = `category:${trimmed}`;
+          if (existingLabels.has(label.toLowerCase())) {
+            console.log(`Category tag already exists: ${label}`);
+            continue;
+          }
+          
+          try {
+            console.log(`Adding category tag: ${label}`);
+            const result = await addTag(currentUser.value, label, book.value.id);
+            if (result && result.success) {
+              addedAny = true;
+              console.log(`Successfully added category tag: ${label}`);
+            } else {
+              console.warn(`Failed to add category tag: ${label}`, result);
+            }
+          } catch (e) {
+            console.warn(`Error adding category tag ${label}:`, e);
+          }
+        }
+
+        if (addedAny) {
+          console.log('Auto-tagging completed, reloading tags');
+          await loadBookTags(currentUser.value, book.value.id);
+          bookTags.value = await getBookTags(book.value.id);
+        } else {
+          console.log('No new category tags added');
+        }
+      } catch (error) {
+        console.error('Error in auto-tagging:', error);
+      }
+    };
     
     return {
       book,
@@ -568,6 +633,17 @@ export default {
   color: #666;
   line-height: 1.6;
   font-size: 1rem;
+}
+
+.shelving-section {
+  padding: 2rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.shelving-section h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
 }
 
 .tags-section {
