@@ -1,3 +1,12 @@
+# Assignment 4b Deliverable Links
+[user journey](src/user_journey.md)
+
+[user journey video](updated_user_journey_uncompressed.mp4)
+
+[visual design study](visual_design_study.pdf)
+
+
+
 # skrib_frontend
 
 Frontend for skrib project, built with Vue 3 + Vite.

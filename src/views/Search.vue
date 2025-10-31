@@ -1,6 +1,6 @@
 <template>
   <div class="search">
-    <h1>📚 Advanced Book Search</h1>
+    <h1> Advanced Book Search</h1>
     <p>Discover your next favorite read with powerful search filters</p>
     
     <div class="search-content">
@@ -35,8 +35,8 @@
       </div>
       
       <div v-else-if="!hasSearched" class="search-prompt">
-        <div class="search-icon">🔍</div>
-        <h3>Start Your Advanced Search</h3>
+        <!-- <div class="search-icon"><img src="../../assets/search-icon.png" alt="Search icon" width = "15"></div>
+        <h3>Start Your Advanced Search</h3> -->
         <p>Use the form above to search by title, author, or tags!</p>
         <div class="search-tips">
           <h4>Search Tips:</h4>
@@ -46,6 +46,7 @@
             <li><strong>Tag Search:</strong> Add tags to find books with specific labels</li>
             <li><strong>Combined Search:</strong> Use multiple criteria for precise results</li>
             <li><strong>Tag Options:</strong> Choose "all tags" for books that must have every tag</li>
+            <li><strong>Google Books:</strong> Preface tag with "category:" to filter by Google Books categories</li>
           </ul>
         </div>
       </div>
@@ -97,7 +98,7 @@ export default {
 .search {
   text-align: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #b52b39 0%, #6c4b73 100%);
   padding: 2rem 1rem;
 }
 

@@ -1,7 +1,7 @@
 <template>
   <div class="post-detail-page">
     <div v-if="!isAuthenticated" class="auth-required">
-      <h2>🔒 Login Required</h2>
+      <h2><img src="../../assets/lock.png" alt="Lock icon" width = "15"></img> Login Required</h2>
       <p>You need to be logged in to view posts and participate in discussions.</p>
       <p>Please login or register to continue:</p>
       <AuthForm @auth-success="handleAuthSuccess" />
@@ -143,7 +143,7 @@ export default {
     const route = useRoute();
     const router = useRouter();
     const { currentUser, currentUsername, isAuthenticated, initializeAuth } = useAuth();
-    const { fetchAllUsers, buildAuthorMap: buildUserMap } = useUsers();
+    const { fetchAllUsers, buildAuthorMap: buildUserMap, fetchUsernameById } = useUsers();
     
     const post = ref(null);
     const isLoading = ref(false);
@@ -158,7 +158,7 @@ export default {
     const isDeleting = ref(false);
     
     const postAuthor = computed(() => {
-      if (!post.value) return '';
+      if (!post.value || !post.value.author) return '';
       return authorMap.value[post.value.author] || `User ${post.value.author.slice(0, 8)}`;
     });
     
@@ -261,10 +261,26 @@ export default {
       console.log('Post upvoted:', upvoteData);
     };
     
+    const loadAuthorUsernames = async (authors) => {
+      const map = {};
+      for (const uid of authors) {
+        map[uid] = await fetchUsernameById(uid);
+      }
+      authorMap.value = map;
+    };
+
+    const loadPostAndAuthors = async () => {
+      await loadPost(); // assume this loads post.value
+      // after loading post, get all unique authorIds for post and its comments
+      const commentAuthors = post.value?.comments?.map(c => c.author) || [];
+      const allAuthors = Array.from(new Set([post.value?.author, ...commentAuthors].filter(Boolean)));
+      await loadAuthorUsernames(allAuthors);
+    };
+    
     onMounted(() => {
       initializeAuth();
       if (isAuthenticated.value) {
-        loadPost();
+        loadPostAndAuthors();
       }
     });
     
@@ -298,7 +314,7 @@ export default {
 <style scoped>
 .post-detail-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* background: linear-gradient(135deg, #b52b39 0%, #6c4b73 100%); */
   padding: 2rem 1rem;
 }
 
@@ -332,7 +348,7 @@ export default {
 .back-btn {
   display: inline-flex;
   align-items: center;
-  background: #42b983;
+  background: #889841;
   color: white;
   text-decoration: none;
   padding: 0.75rem 1.5rem;
@@ -342,7 +358,7 @@ export default {
 }
 
 .back-btn:hover {
-  background: #369870;
+  background: #5b662a;
 }
 
 .loading, .error {
@@ -354,7 +370,7 @@ export default {
 }
 
 .error h2 {
-  color: #dc3545;
+  color: #b52b39;
   margin-bottom: 1rem;
 }
 
@@ -414,7 +430,7 @@ export default {
 
 .edit-textarea:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: #889841;
   box-shadow: 0 0 0 2px rgba(66, 185, 131, 0.2);
 }
 
@@ -453,7 +469,7 @@ export default {
 }
 
 .delete-btn {
-  background-color: #dc3545;
+  background-color: #b52b39;
   color: white;
 }
 
@@ -462,12 +478,12 @@ export default {
 }
 
 .save-btn {
-  background-color: #42b983;
+  background-color: #889841;
   color: white;
 }
 
 .save-btn:hover:not(:disabled) {
-  background-color: #369870;
+  background-color: #5b662a;
 }
 
 .cancel-btn {

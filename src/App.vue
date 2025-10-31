@@ -3,15 +3,15 @@
     <header>
       <nav>
         <div class="nav-brand">
-          <router-link to="/">Skrib</router-link>
+          <router-link to="/" class="main-home-link">Skrib</router-link>
         </div>
         <div class="nav-links">
-          <router-link to="/" class="nav-link">Home</router-link>
+          <!-- <router-link to="/" class="nav-link">Home</router-link> -->
           <router-link to="/forum" class="nav-link">Forum</router-link>
           <router-link to="/search" class="nav-link">Search</router-link>
           <router-link v-if="isAuthenticated" to="/profile" class="nav-link">Profile</router-link>
           <div v-if="isAuthenticated" class="notification-bell" @click="toggleNotifications">
-            <span class="bell-icon">🔔</span>
+            <span class="bell-icon"><img src="../../assets/bell.png" alt="Bell icon" width = "20"></span>
             <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
           </div>
         </div>
@@ -70,6 +70,25 @@ export default {
 </script>
 
 <style>
+@font-face {
+    font-family: rouge-vintage;
+    src: url('../assets/RougeVintage.ttf');
+}
+
+@font-face {
+    font-family: spbutch-lite;
+    src: url('../assets/LinLibertine_R.ttf');
+}
+
+:root {
+  --color-primary: #889841;
+  --color-accent: #efbe37;
+  --color-warn: #e86830;
+  --color-danger: #b52b39;
+  --color-purple: #6c4b73;
+  --color-text: #2c3e50;
+  --color-bg: #fff9ef;
+}
 * {
   margin: 0;
   padding: 0;
@@ -77,10 +96,19 @@ export default {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; */
+  font-family: spbutch-lite, Verdana, sans-serif;
   line-height: 1.6;
   color: #333;
-  background-color: #f5f5f5;
+  background-color: var(--color-bg);
+}
+
+button {
+  font-family: spbutch-lite, Courier New, Courier, monospace;
+}
+
+.main-home-link, h1 {
+  font-family: rouge-vintage, Courier New, Courier, monospace;
 }
 
 #app {
@@ -90,7 +118,7 @@ body {
 }
 
 header {
-  background-color: #fff;
+  background-color: var(--color-accent);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1rem 2rem;
 }
@@ -103,23 +131,24 @@ nav {
 }
 
 .nav-brand a {
-  color: #2c3e50;
+  color: var(--color-text);
   text-decoration: none;
   font-size: 1.5rem;
   font-weight: 600;
 }
 
 .nav-brand a:hover {
-  color: #42b983;
+  color: var(--color-purple);
 }
 
 .nav-links {
   display: flex;
   gap: 2rem;
+  font-size: 2.5rem;
 }
 
 .nav-link {
-  color: #2c3e50;
+  color: var(--color-text);
   text-decoration: none;
   font-size: 1rem;
   font-weight: 500;
@@ -127,12 +156,12 @@ nav {
 }
 
 .nav-link:hover {
-  color: #42b983;
+  color: var(--color-purple);
 }
 
 .nav-link.router-link-active {
-  color: #42b983;
-  border-bottom: 2px solid #42b983;
+  color: var(--color-purple);
+  border-bottom: 2px solid var(--color-purple);
   padding-bottom: 0.25rem;
 }
 
@@ -156,7 +185,7 @@ nav {
   position: absolute;
   top: 0;
   right: 0;
-  background: #dc3545;
+  background: var(--color-danger);
   color: white;
   border-radius: 50%;
   width: 18px;

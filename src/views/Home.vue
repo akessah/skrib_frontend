@@ -22,21 +22,6 @@
         
         <!-- Tagged Books Section -->
         <TaggedBooks />
-        
-        <div class="feature-cards">
-          <div class="feature-card">
-            <h3>📝 Create Posts</h3>
-            <p>Share your thoughts and ask for book recommendations</p>
-          </div>
-          <div class="feature-card">
-            <h3>💬 Join Discussions</h3>
-            <p>Engage with the community and share your insights</p>
-          </div>
-          <div class="feature-card">
-            <h3>🔍 Discover Books</h3>
-            <p>Find your next favorite read through community recommendations</p>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -97,7 +82,7 @@ p {
 
 .home-content {
   margin-top: 2rem;
-  max-width: 800px;
+  max-width: 1000px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -142,28 +127,4 @@ p {
   margin-top: 2rem;
 }
 
-.feature-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  transition: transform 0.2s;
-}
-
-.feature-card:hover {
-  transform: translateY(-2px);
-}
-
-.feature-card h3 {
-  color: #2c3e50;
-  margin-bottom: 1rem;
-  font-size: 1.3rem;
-}
-
-.feature-card p {
-  color: #666;
-  font-size: 1rem;
-  margin: 0;
-}
 </style>

@@ -22,10 +22,10 @@ export const SHELF_LABELS = {
 };
 
 export const SHELF_ICONS = {
-  [SHELF_STATUS.WANT_TO_READ]: '📚',
-  [SHELF_STATUS.CURRENTLY_READING]: '📖',
-  [SHELF_STATUS.READ]: '✅',
-  [SHELF_STATUS.DID_NOT_FINISH]: '❌'
+  [SHELF_STATUS.WANT_TO_READ]: '<img src="../../assets/book-stack.png" alt="Books icon" width="20">',
+  [SHELF_STATUS.CURRENTLY_READING]: '<img src="../../assets/open-book.png" alt="Open book icon" width="20">',
+  [SHELF_STATUS.READ]: '<img src="../../assets/book.png" alt="Checkmark icon" width="20">',
+  [SHELF_STATUS.DID_NOT_FINISH]: '<img src="../../assets/x-mark.png" alt="X mark icon" width="20">'
 };
 
 export function useShelving() {

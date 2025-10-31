@@ -73,7 +73,7 @@ export default {
 .book-search-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  border-color: #42b983;
+  border-color: #889841;
 }
 
 .book-cover {
@@ -140,7 +140,7 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  color: #42b983;
+  color: #889841;
   font-size: 0.8rem;
   opacity: 0;
   transition: opacity 0.2s;

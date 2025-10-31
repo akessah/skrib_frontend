@@ -69,7 +69,7 @@
               target="_blank" 
               class="preview-btn"
             >
-              📖 Preview
+              <img src="../../assets/open-book.png" alt="Book icon" width = "15"> Preview
             </a>
             <a 
               v-if="book.volumeInfo.infoLink" 
@@ -77,14 +77,14 @@
               target="_blank" 
               class="info-btn"
             >
-              ℹ️ More Info
+              <img src="../../assets/info.png" alt="Info icon" width = "15"></img> More Info
             </a>
             <button 
               v-if="isAuthenticated"
               @click="toggleTagForm"
               class="tag-btn"
             >
-              🏷️ {{ hasTags ? 'Manage Tags' : 'Add Tag' }}
+              <img src="../../assets/tag.png" alt="Tag icon" width = "15"> {{ hasTags ? 'Manage Tags' : 'Add Tag' }}
             </button>
           </div>
         </div>
@@ -96,9 +96,23 @@
         <div class="description-content" v-html="book.volumeInfo.description"></div>
       </div>
       
+      <!-- Categories (from Google Books) -->
+      <div v-if="book.volumeInfo.categories && book.volumeInfo.categories.length" class="categories-section">
+        <h3>Categories</h3>
+        <div class="categories-list">
+          <span
+            v-for="(cat, idx) in splitCategories(book.volumeInfo.categories)"
+            :key="idx"
+            class="category-badge"
+          >
+            {{ cat }}
+          </span>
+        </div>
+      </div>
+      
       <!-- Shelving Section -->
       <div v-if="isAuthenticated" class="shelving-section">
-        <h3>📚 Add to Your Shelf</h3>
+        <h3> Add to Your Shelf</h3>
         <ShelfButton :book-id="book.id" />
       </div>
       
@@ -173,7 +187,7 @@
         <div v-else-if="isAuthenticated && bookTags.length === 0" class="no-tags">
           <p>No tags yet. Be the first to tag this book!</p>
           <button @click="toggleTagForm" class="add-first-tag-btn">
-            🏷️ Add First Tag
+            <img src="../../assets/tag.png" alt="Tag icon" width = "15"></img> Add First Tag
           </button>
         </div>
       </div>
@@ -317,64 +331,25 @@ export default {
       return stars;
     };
     
+    const splitCategories = (categories) => {
+      if (!Array.isArray(categories)) return [];
+      
+      const allCategories = [];
+      categories.forEach(category => {
+        if (typeof category === 'string') {
+          // Split by "/" and trim each part
+          const parts = category.split('/').map(part => part.trim()).filter(part => part.length > 0);
+          allCategories.push(...parts);
+        }
+      });
+      
+      // Remove duplicates while preserving order
+      return [...new Set(allCategories)];
+    };
+    
     onMounted(async () => {
       await loadBookDetails();
-      // Auto-add category tags from Google Books categories
-      await addAutoCategoryTags();
     });
-    
-    const addAutoCategoryTags = async () => {
-      try {
-        if (!isAuthenticated.value || !currentUser.value || !book.value) return;
-        
-        const categories = book.value?.volumeInfo?.categories || [];
-        if (!Array.isArray(categories) || categories.length === 0) {
-          console.log('No categories found for auto-tagging');
-          return;
-        }
-
-        console.log('Auto-adding category tags from Google Books categories:', categories);
-
-        // Build a quick lookup of existing labels (case-insensitive)
-        const existingLabels = new Set(
-          (bookTags.value || []).map(t => (t.label || '').toLowerCase())
-        );
-
-        let addedAny = false;
-        for (const rawCategory of categories) {
-          const trimmed = (rawCategory || '').trim();
-          if (!trimmed) continue;
-          const label = `category:${trimmed}`;
-          if (existingLabels.has(label.toLowerCase())) {
-            console.log(`Category tag already exists: ${label}`);
-            continue;
-          }
-          
-          try {
-            console.log(`Adding category tag: ${label}`);
-            const result = await addTag(currentUser.value, label, book.value.id);
-            if (result && result.success) {
-              addedAny = true;
-              console.log(`Successfully added category tag: ${label}`);
-            } else {
-              console.warn(`Failed to add category tag: ${label}`, result);
-            }
-          } catch (e) {
-            console.warn(`Error adding category tag ${label}:`, e);
-          }
-        }
-
-        if (addedAny) {
-          console.log('Auto-tagging completed, reloading tags');
-          await loadBookTags(currentUser.value, book.value.id);
-          bookTags.value = await getBookTags(book.value.id);
-        } else {
-          console.log('No new category tags added');
-        }
-      } catch (error) {
-        console.error('Error in auto-tagging:', error);
-      }
-    };
     
     return {
       book,
@@ -393,7 +368,8 @@ export default {
       handleAddTag,
       removeTag: handleRemoveTag,
       formatDate,
-      getStars
+      getStars,
+      splitCategories
     };
   }
 };
@@ -402,7 +378,7 @@ export default {
 <style scoped>
 .book-detail-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #b52b39 0%, #6c4b73 100%);
   padding: 2rem 1rem;
 }
 
@@ -589,12 +565,12 @@ export default {
 }
 
 .preview-btn {
-  background: #42b983;
+  background: #889841;
   color: white;
 }
 
 .preview-btn:hover {
-  background: #369870;
+  background: #5b662a;
   transform: translateY(-2px);
 }
 
@@ -609,12 +585,12 @@ export default {
 }
 
 .tag-btn {
-  background: #17a2b8;
+  background: #6c4b73;
   color: white;
 }
 
 .tag-btn:hover {
-  background: #138496;
+  background: #48314c;
   transform: translateY(-2px);
 }
 
@@ -633,6 +609,32 @@ export default {
   color: #666;
   line-height: 1.6;
   font-size: 1rem;
+}
+
+.categories-section {
+  padding: 2rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.categories-section h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.categories-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.category-badge {
+  background: #efbe37;
+  color: #2c3e50;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .shelving-section {
@@ -688,7 +690,7 @@ export default {
 .remove-tag-btn {
   background: none;
   border: none;
-  color: #dc3545;
+  color: #b52b39;
   cursor: pointer;
   font-size: 1.2rem;
   font-weight: bold;
@@ -733,7 +735,7 @@ export default {
 }
 
 .close-btn:hover {
-  color: #dc3545;
+  color: #b52b39;
 }
 
 .form-group {
@@ -750,7 +752,7 @@ export default {
 
 .tag-input:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: #889841;
   box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.1);
 }
 
@@ -765,7 +767,7 @@ export default {
 }
 
 .add-tag-btn {
-  background: #42b983;
+  background: #889841;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -776,7 +778,7 @@ export default {
 }
 
 .add-tag-btn:hover:not(:disabled) {
-  background: #369870;
+  background: #5b662a;
 }
 
 .add-tag-btn:disabled {
@@ -811,7 +813,7 @@ export default {
 }
 
 .add-first-tag-btn {
-  background: #17a2b8;
+  background: #6c4b73;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -823,7 +825,7 @@ export default {
 }
 
 .add-first-tag-btn:hover {
-  background: #138496;
+  background: #48314c;
 }
 
 .error-message {

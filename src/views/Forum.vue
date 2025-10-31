@@ -6,7 +6,7 @@
     <div class="forum-content">
       <!-- Authentication Section -->
       <div v-if="!isAuthenticated" class="auth-section">
-        <h2>🔒 Login Required</h2>
+        <h2><img src="../../assets/lock.png" alt="Lock icon" width = "15"> Login Required</h2>
         <p>You need to be logged in to access the forum and participate in discussions.</p>
         <p>Please login or register to continue:</p>
         <AuthForm @auth-success="handleAuthSuccess" />
@@ -112,7 +112,7 @@ p {
 
 .forum-content {
   margin-top: 2rem;
-  max-width: 800px;
+  max-width: 1000px;
   margin-left: auto;
   margin-right: auto;
 }

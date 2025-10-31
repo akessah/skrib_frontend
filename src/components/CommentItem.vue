@@ -289,7 +289,7 @@ export default {
   padding: 1rem;
   border-radius: 6px;
   margin-bottom: 0.75rem;
-  border-left: 3px solid #42b983;
+  border-left: 3px solid #889841;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -342,7 +342,7 @@ export default {
 }
 
 .delete-btn {
-  background-color: #dc3545;
+  background-color: #b52b39;
   color: white;
 }
 
@@ -351,7 +351,7 @@ export default {
 }
 
 .reply-btn {
-  background-color: #17a2b8;
+  background-color: #6c4b73;
   color: white;
   border: none;
   padding: 0.25rem 0.5rem;
@@ -362,7 +362,7 @@ export default {
 }
 
 .reply-btn:hover:not(:disabled) {
-  background-color: #138496;
+  background-color: #48314c;
 }
 
 .reply-form {
@@ -394,7 +394,7 @@ export default {
 }
 
 .toggle-replies-btn:hover {
-  color: #42b983;
+  color: #889841;
 }
 
 .nested-comments {
@@ -436,7 +436,7 @@ export default {
 
 .edit-textarea:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: #889841;
 }
 
 .edit-textarea:disabled {
@@ -452,7 +452,7 @@ export default {
 }
 
 .save-btn {
-  background-color: #42b983;
+  background-color: #889841;
   color: white;
   border: none;
   padding: 0.25rem 0.75rem;
@@ -463,7 +463,7 @@ export default {
 }
 
 .save-btn:hover:not(:disabled) {
-  background-color: #369870;
+  background-color: #5b662a;
 }
 
 .save-btn:disabled {

@@ -96,6 +96,10 @@ export default {
     currentUser: {
       type: String,
       required: true
+    },
+    authorMap: {
+      type: Object,
+      default: () => ({})
     }
   },
   emits: ['post-updated', 'post-deleted', 'post-upvoted'],
@@ -113,7 +117,7 @@ export default {
       return this.post.author === this.currentUser;
     },
     postAuthor() {
-      return `User ${this.post.author.slice(0, 8)}`;
+      return this.authorMap[this.post.author] || `User ${this.post.author.slice(0, 8)}`;
     }
   },
   methods: {
@@ -197,7 +201,7 @@ export default {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 1rem;
-  border-left: 4px solid #42b983;
+  border-left: 4px solid #889841;
 }
 
 .post-header {
@@ -243,7 +247,7 @@ export default {
 }
 
 .delete-btn {
-  background-color: #dc3545;
+  background-color: #b52b39;
   color: white;
 }
 
@@ -301,7 +305,7 @@ export default {
 
 .edit-textarea:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: #889841;
 }
 
 .edit-textarea:disabled {
@@ -317,7 +321,7 @@ export default {
 }
 
 .save-btn {
-  background-color: #42b983;
+  background-color: #889841;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -328,7 +332,7 @@ export default {
 }
 
 .save-btn:hover:not(:disabled) {
-  background-color: #369870;
+  background-color: #5b662a;
 }
 
 .save-btn:disabled {

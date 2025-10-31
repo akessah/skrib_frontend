@@ -224,8 +224,10 @@ class ApiService {
   // Google Books API
   async searchBooks(query, maxResults = 20, startIndex = 0) {
     try {
+
+      console.log(`Searching books with query: https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&startIndex=${startIndex}&printType=books`);
       const response = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${maxResults}&startIndex=${startIndex}&printType=books`
+        `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=${maxResults}&startIndex=${startIndex}&printType=books`
       );
       
       if (!response.ok) {

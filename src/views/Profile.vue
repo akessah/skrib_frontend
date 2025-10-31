@@ -2,7 +2,7 @@
   <div class="profile-page">
     <div class="profile-container">
       <div v-if="!isAuthenticated" class="auth-required">
-        <h2>🔒 Login Required</h2>
+        <h2> Login Required</h2>
         <p>You need to be logged in to view your profile.</p>
         <p>Please login or register to continue:</p>
         <AuthForm @auth-success="handleAuthSuccess" />
@@ -10,14 +10,14 @@
       
       <div v-else class="profile-content">
         <div class="profile-header">
-          <h2>👤 Your Profile</h2>
+          <h2> Your Profile</h2>
           <p class="welcome-message">Welcome back, {{ currentUsername }}!</p>
         </div>
         
         <div class="profile-sections">
           <!-- User Information Section -->
           <div class="profile-section">
-            <h3>📋 Account Information</h3>
+            <h3> Account Information</h3>
             <div class="info-item">
               <label>Username:</label>
               <span class="username-display">{{ currentUsername }}</span>
@@ -30,7 +30,7 @@
           
           <!-- Password Management Section -->
           <div class="profile-section">
-            <h3>🔐 Password Management</h3>
+            <h3> Password Management</h3>
             <div class="password-form">
               <div class="form-group">
                 <label for="currentPassword">Current Password:</label>
@@ -81,13 +81,13 @@
           
           <!-- Account Actions Section -->
           <div class="profile-section">
-            <h3>⚙️ Account Actions</h3>
+            <h3> Account Actions</h3>
             <div class="action-buttons">
               <button @click="handleLogout" class="logout-btn">
-                🚪 Logout
+                Logout
               </button>
               <button @click="showDeleteConfirm = true" class="delete-account-btn">
-                🗑️ Delete Account
+                Delete Account
               </button>
             </div>
           </div>
@@ -95,7 +95,7 @@
           <!-- Notifications Section -->
           <div class="profile-section">
             <div class="notifications-header">
-              <h3>🔔 Notifications</h3>
+              <h3> Notifications</h3>
               <div class="notification-actions">
                 <button 
                   @click="markAllAsRead" 
@@ -105,7 +105,7 @@
                   {{ isMarkingAll ? 'Marking...' : 'Mark All as Read' }}
                 </button>
                 <button @click="refreshNotifications" class="refresh-btn">
-                  🔄 Refresh
+                  Refresh
                 </button>
               </div>
             </div>
@@ -149,10 +149,10 @@
           <!-- Tag Management Section -->
           <div class="profile-section">
             <div class="tags-header">
-              <h3>🏷️ Tag Management</h3>
+              <h3> Tag Management</h3>
               <div class="tag-actions">
                 <button @click="refreshTags" class="refresh-btn">
-                  🔄 Refresh Tags
+                   Refresh Tags
                 </button>
               </div>
             </div>
@@ -177,7 +177,7 @@
                 <h4>No tags yet</h4>
                 <p>Start tagging books in the search page to organize your reading list!</p>
                 <router-link to="/search" class="search-link">
-                  🔍 Search for Books
+                  <img src="../../assets/search-icon.png" alt="Search icon" width = "15"> Search for Books
                 </router-link>
               </div>
             </div>
@@ -217,7 +217,12 @@
                       <span class="tag-label">{{ tag.label }}</span>
                       <span class="tag-book">{{ getBookTitle(tag.book) }}</span>
                       <span class="tag-privacy" :class="{ 'private': tag.private }">
-                        {{ tag.private ? '🔒 Private' : '🌐 Public' }}
+                        <template v-if="tag.private">
+                          <img src="../../assets/lock.png" alt="Lock icon" width = "15"> Private
+                        </template>
+                        <template v-else>
+                          <img src="../../assets/internet.png" alt="Public icon" width = "15"> Public
+                        </template>
                       </span>
                     </div>
                     <div class="tag-actions">
@@ -226,14 +231,15 @@
                         class="privacy-btn"
                         :title="tag.private ? 'Make Public' : 'Make Private'"
                       >
-                        {{ tag.private ? '🌐' : '🔒' }}
+                        <template v-if="tag.private"><img src="../../assets/internet.png" alt="Public icon" width = "15"></template>
+                        <template v-else><img src="../../assets/lock.png" alt="Lock icon" width = "15"></template>
                       </button>
                       <button 
                         @click="removeTag(tag._id)"
                         class="remove-btn"
                         title="Remove Tag"
                       >
-                        🗑️
+                        <img src="../../assets/bin.png" alt="Trash icon" width = "15"></img>
                       </button>
                     </div>
                   </div>
@@ -243,22 +249,6 @@
             
             <div v-if="tagError" class="error-message">
               {{ tagError }}
-            </div>
-          </div>
-          
-          <!-- Navigation Section -->
-          <div class="profile-section">
-            <h3>🧭 Navigation</h3>
-            <div class="nav-buttons">
-              <router-link to="/forum" class="nav-btn forum-btn">
-                💬 Go to Forum
-              </router-link>
-              <router-link to="/home" class="nav-btn home-btn">
-                🏠 Go to Home
-              </router-link>
-              <router-link to="/search" class="nav-btn search-btn">
-                🔍 Go to Search
-              </router-link>
             </div>
           </div>
         </div>
@@ -355,8 +345,8 @@ export default {
     const tagError = ref(null);
     const bookDetails = ref({}); // Cache for book details
     
-    const userLabels = computed(() => getUserLabels.value);
-    const recentTags = computed(() => userTags.value.slice(0, 10)); // Show last 10 tags
+    const userLabels = computed(() => (getUserLabels.value || []).filter(l => !(l.label || '').toLowerCase().startsWith('category:')));
+    const recentTags = computed(() => (userTags.value || []).filter(t => !(t.label || '').toLowerCase().startsWith('category:')).slice(0, 10)); // Show last 10 tags
     
     const isPasswordFormValid = computed(() => {
       return passwordForm.value.currentPassword &&
@@ -399,7 +389,7 @@ export default {
       try {
         await logout();
         // Redirect to home page after logout
-        router.push('/home');
+        router.push('/');
       } catch (error) {
         console.error('Logout failed:', error);
       }
@@ -576,7 +566,6 @@ export default {
 <style scoped>
 .profile-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 2rem 1rem;
 }
 
@@ -611,7 +600,7 @@ export default {
 }
 
 .profile-header {
-  background: linear-gradient(135deg, #42b983 0%, #369870 100%);
+  background: linear-gradient(135deg, #b52b39 0%, #6c4b73 100%);
   color: white;
   padding: 2rem;
   text-align: center;
@@ -668,7 +657,7 @@ export default {
 
 .username-display {
   font-weight: 600;
-  color: #42b983;
+  color: #889841;
   font-size: 1.1rem;
 }
 
@@ -704,7 +693,7 @@ export default {
 
 .form-group input:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: #889841;
   box-shadow: 0 0 0 2px rgba(66, 185, 131, 0.2);
 }
 
@@ -714,7 +703,7 @@ export default {
 }
 
 .change-password-btn {
-  background: #42b983;
+  background: #889841;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -726,7 +715,7 @@ export default {
 }
 
 .change-password-btn:hover:not(:disabled) {
-  background: #369870;
+  background: #5b662a;
 }
 
 .change-password-btn:disabled {
@@ -757,7 +746,7 @@ export default {
 }
 
 .delete-account-btn {
-  background: #dc3545;
+  background: #b52b39;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -772,51 +761,6 @@ export default {
   background: #c82333;
 }
 
-.nav-buttons {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.nav-btn {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: all 0.2s;
-  text-align: center;
-}
-
-.forum-btn {
-  background: #42b983;
-  color: white;
-}
-
-.forum-btn:hover {
-  background: #369870;
-  transform: translateY(-2px);
-}
-
-.home-btn {
-  background: #17a2b8;
-  color: white;
-}
-
-.home-btn:hover {
-  background: #138496;
-  transform: translateY(-2px);
-}
-
-.search-btn {
-  background: #ffc107;
-  color: #212529;
-}
-
-.search-btn:hover {
-  background: #e0a800;
-  transform: translateY(-2px);
-}
 
 .error-message {
   background: #f8d7da;
@@ -861,7 +805,7 @@ export default {
 }
 
 .modal-content h3 {
-  color: #dc3545;
+  color: #b52b39;
   margin-bottom: 1rem;
 }
 
@@ -901,7 +845,7 @@ export default {
 }
 
 .confirm-delete-btn {
-  background: #dc3545;
+  background: #b52b39;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -983,7 +927,7 @@ export default {
   display: block;
   font-size: 1.5rem;
   font-weight: bold;
-  color: #42b983;
+  color: #889841;
 }
 
 .stat-label {
@@ -1063,7 +1007,7 @@ export default {
 
 .search-link {
   display: inline-block;
-  background: #42b983;
+  background: #889841;
   color: white;
   text-decoration: none;
   padding: 0.5rem 1rem;
@@ -1073,7 +1017,7 @@ export default {
 }
 
 .search-link:hover {
-  background: #369870;
+  background: #5b662a;
 }
 
 .tags-content {
@@ -1125,7 +1069,7 @@ export default {
 }
 
 .view-books-btn {
-  background: #42b983;
+  background: #889841;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -1137,7 +1081,7 @@ export default {
 }
 
 .view-books-btn:hover {
-  background: #369870;
+  background: #5b662a;
 }
 
 .recent-tags-list {

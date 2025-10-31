@@ -25,6 +25,7 @@
           :key="post._id"
           :post="post"
           :current-user="currentUser"
+          :author-map="authorMap"
           @post-updated="handlePostUpdated"
           @post-deleted="handlePostDeleted"
           @post-upvoted="handlePostUpvoted"
@@ -38,14 +39,14 @@
 </template>
 
 <script>
+import { ref, onMounted } from 'vue';
 import PostItem from './PostItem.vue';
 import apiService from '../services/api.js';
+import { useUsers } from '../composables/useUsers.js';
 
 export default {
   name: 'PostList',
-  components: {
-    PostItem
-  },
+  components: { PostItem },
   props: {
     currentUser: {
       type: String,
@@ -53,59 +54,66 @@ export default {
     }
   },
   emits: ['posts-loaded', 'post-upvoted'],
-  data() {
-    return {
-      posts: [],
-      isLoading: false,
-      error: null
-    };
-  },
-  async mounted() {
-    await this.loadPosts();
-  },
-  methods: {
-    async loadPosts() {
-      this.isLoading = true;
-      this.error = null;
+  setup(props, { emit }) {
+    const posts = ref([]);
+    const isLoading = ref(false);
+    const error = ref(null);
+    const authorMap = ref({});
+    const { fetchAllUsers, users, fetchUsernameById } = useUsers();
 
+    const loadPosts = async () => {
+      isLoading.value = true;
+      error.value = null;
       try {
         const response = await apiService.getAllPosts();
-        this.posts = response || [];
-        this.$emit('posts-loaded', this.posts);
-      } catch (error) {
-        this.error = error.message || 'Failed to load posts. Please try again.';
-        this.posts = [];
+        const allPosts = response || [];
+        // Sort posts by _id descending (newest first) - MongoDB ObjectIds encode creation time
+        posts.value = allPosts.sort((a, b) => {
+          // Compare ObjectIds as strings - newer IDs are lexicographically larger
+          return b._id.localeCompare(a._id);
+        });
+        // build authorMap using live API resolution
+        const userIds = Array.from(new Set(posts.value.map(p => p.author)));
+        const usernameMap = {};
+        for (const uid of userIds) {
+          usernameMap[uid] = await fetchUsernameById(uid);
+        }
+        // always use usernameMap for user lookups
+        const map = {};
+        posts.value.forEach(post => {
+          if (post.author && usernameMap[post.author]) {
+            map[post.author] = usernameMap[post.author];
+          } else if (post.author) {
+            map[post.author] = `User ${post.author.slice(0, 8)}`;
+          }
+        });
+        authorMap.value = map;
+        emit('posts-loaded', posts.value);
+      } catch (err) {
+        error.value = err.message || 'Failed to load posts. Please try again.';
+        posts.value = [];
       } finally {
-        this.isLoading = false;
+        isLoading.value = false;
       }
-    },
-    
-    async refreshPosts() {
-      await this.loadPosts();
-      // Emit posts-loaded to trigger author map building
-      this.$emit('posts-loaded', this.posts);
-    },
-    
-    handlePostUpdated(updatedPost) {
-      const index = this.posts.findIndex(post => post._id === updatedPost._id);
-      if (index !== -1) {
-        this.posts.splice(index, 1, updatedPost);
-      }
-    },
-    
-    handlePostDeleted(postId) {
-      this.posts = this.posts.filter(post => post._id !== postId);
-    },
-    
-    handlePostUpvoted(upvoteData) {
-      // Emit upvote event to parent component
-      this.$emit('post-upvoted', upvoteData);
-    },
-    
-    addNewPost(post) {
-      // Add new post to the beginning of the list
-      this.posts.unshift(post);
-    }
+    };
+
+    onMounted(async () => {
+      await fetchAllUsers();
+      await loadPosts();
+    });
+
+    const refreshPosts = loadPosts;
+    const handlePostUpdated = (updatedPost) => {
+      const index = posts.value.findIndex(post => post._id === updatedPost._id);
+      if (index !== -1) posts.value.splice(index, 1, updatedPost);
+    };
+    const handlePostDeleted = (postId) => {
+      posts.value = posts.value.filter(post => post._id !== postId);
+    };
+    const handlePostUpvoted = (upvoteData) => emit('post-upvoted', upvoteData);
+    const addNewPost = (post) => posts.value.unshift(post);
+
+    return { posts, isLoading, error, authorMap, refreshPosts, handlePostUpdated, handlePostDeleted, handlePostUpvoted, addNewPost, currentUser: props.currentUser };
   }
 };
 </script>
@@ -134,7 +142,7 @@ export default {
 }
 
 .refresh-btn {
-  background-color: #42b983;
+  background-color: #889841;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -145,7 +153,7 @@ export default {
 }
 
 .refresh-btn:hover:not(:disabled) {
-  background-color: #369870;
+  background-color: #5b662a;
 }
 
 .refresh-btn:disabled {

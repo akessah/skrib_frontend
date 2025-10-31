@@ -19,14 +19,14 @@
             :key="status" 
             :value="status"
           >
-            {{ SHELF_ICONS[status] }} {{ label }}
+            <span v-html="SHELF_ICONS[status]"></span> {{ label }}
           </option>
         </select>
       </div>
       
       <div v-else class="current-shelf">
         <div class="shelf-info">
-          <span class="shelf-icon">{{ SHELF_ICONS[currentStatus] }}</span>
+          <span class="shelf-icon" v-html="SHELF_ICONS[currentStatus]"></span>
           <span class="shelf-text">{{ SHELF_LABELS[currentStatus] }}</span>
         </div>
         
@@ -44,7 +44,7 @@
               :value="status"
               :disabled="status === currentStatus"
             >
-              {{ SHELF_ICONS[status] }} {{ label }}
+              <span v-html="SHELF_ICONS[status]"></span> {{ label }}
             </option>
           </select>
           
@@ -54,7 +54,7 @@
             :disabled="isLoading"
             title="Remove from shelf"
           >
-            🗑️
+            <img src="../../assets/bin.png" alt="Trash icon" width = "15"></img>
           </button>
         </div>
       </div>
@@ -299,7 +299,7 @@ export default {
 
 .shelf-select:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: #889841;
   box-shadow: 0 0 0 2px rgba(66, 185, 131, 0.1);
 }
 
@@ -344,7 +344,7 @@ export default {
 }
 
 .remove-btn {
-  background: #dc3545;
+  background: #b52b39;
   color: white;
   border: none;
   padding: 0.5rem;

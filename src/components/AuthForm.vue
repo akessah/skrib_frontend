@@ -163,8 +163,8 @@ export default {
 }
 
 .tab-btn.active {
-  color: #42b983;
-  border-bottom-color: #42b983;
+  color: #889841;
+  border-bottom-color: #889841;
 }
 
 .form-group {
@@ -189,7 +189,7 @@ export default {
 
 .form-group input:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: #889841;
 }
 
 .form-group input:disabled {
@@ -199,7 +199,7 @@ export default {
 
 .submit-btn {
   width: 100%;
-  background-color: #42b983;
+  background-color: #889841;
   color: white;
   border: none;
   padding: 0.75rem;
@@ -211,7 +211,7 @@ export default {
 }
 
 .submit-btn:hover:not(:disabled) {
-  background-color: #369870;
+  background-color: #5b662a;
 }
 
 .submit-btn:disabled {

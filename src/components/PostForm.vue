@@ -138,7 +138,7 @@ export default {
 
 .form-group textarea:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: #889841;
 }
 
 .form-group textarea:disabled {
@@ -153,7 +153,7 @@ export default {
 }
 
 .submit-btn {
-  background-color: #42b983;
+  background-color: #889841;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -165,7 +165,7 @@ export default {
 }
 
 .submit-btn:hover:not(:disabled) {
-  background-color: #369870;
+  background-color: #5b662a;
 }
 
 .submit-btn:disabled {

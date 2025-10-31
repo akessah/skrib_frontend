@@ -4,14 +4,14 @@
       @click="handleUpvote"
       :disabled="isLoading || !currentUser"
       :class="{ 
-        'upvoted': upvoteData.userVoted, 
+        'upvoted': upvoteData?.userVoted, 
         'disabled': !currentUser 
       }"
       class="upvote-btn"
-      :title="currentUser ? (upvoteData.userVoted ? 'Remove upvote' : 'Upvote') : 'Login to vote'"
+      :title="currentUser ? (upvoteData?.userVoted ? 'Remove upvote' : 'Upvote') : 'Login to vote'"
     >
-      <span class="upvote-icon">👍</span>
-      <span class="upvote-count">{{ upvoteData.count }}</span>
+      <span class="upvote-icon"><img src="../../assets/up-arrow.png" alt="Like icon" width = "15"></img></span>
+      <span class="upvote-count">{{ upvoteData?.count ?? 0 }}</span>
     </button>
     
     <div v-if="error" class="error-message">
@@ -47,10 +47,11 @@ export default {
     const loadUpvotes = async () => {
       try {
         const data = await loadUpvotesForItem(props.itemId, props.currentUser);
-        upvoteData.value = data;
+        upvoteData.value = data || { count: 0, userVoted: false };
       } catch (err) {
         console.error('Failed to load upvotes:', err);
         error.value = 'Failed to load upvotes';
+        upvoteData.value = { count: 0, userVoted: false };
       }
     };
 
@@ -65,8 +66,8 @@ export default {
 
       try {
         const newData = await toggleUpvote(props.itemId, props.currentUser);
-        upvoteData.value = newData;
-        emit('upvote-toggled', newData);
+        upvoteData.value = newData || { count: upvoteData.value.count, userVoted: !upvoteData.value.userVoted };
+        emit('upvote-toggled', upvoteData.value);
       } catch (err) {
         error.value = err.message || 'Failed to vote. Please try again.';
       } finally {
@@ -120,19 +121,19 @@ export default {
 }
 
 .upvote-btn:hover:not(:disabled) {
-  border-color: #42b983;
-  color: #42b983;
+  border-color: #889841;
+  color: #889841;
 }
 
 .upvote-btn.upvoted {
-  background-color: #42b983;
-  border-color: #42b983;
+  background-color: #889841;
+  border-color: #889841;
   color: white;
 }
 
 .upvote-btn.upvoted:hover:not(:disabled) {
-  background-color: #369870;
-  border-color: #369870;
+  background-color: #5b662a;
+  border-color: #5b662a;
 }
 
 .upvote-btn:disabled {

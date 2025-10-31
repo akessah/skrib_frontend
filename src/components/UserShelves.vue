@@ -1,7 +1,7 @@
 <template>
   <div class="user-shelves">
     <div class="shelves-header">
-      <h2>📚 Your Reading Shelves</h2>
+      <h2> Your Reading Shelves</h2>
       <p v-if="totalShelvedBooks > 0">
         You have {{ totalShelvedBooks }} book{{ totalShelvedBooks !== 1 ? 's' : '' }} on your shelves
       </p>
@@ -25,7 +25,7 @@
       <h3>No Books on Your Shelves</h3>
       <p>Start exploring books and add them to your reading shelves!</p>
       <router-link to="/search" class="search-link">
-        🔍 Search for Books
+        <img src="../../assets/search-icon.png" alt="Search icon" width = "15"> Search for Books
       </router-link>
     </div>
     
@@ -38,7 +38,7 @@
       >
         <div class="shelf-header">
           <h3 class="shelf-title">
-            <span class="shelf-icon">{{ SHELF_ICONS[status] }}</span>
+            <span class="shelf-icon" v-html="SHELF_ICONS[status]"></span>
             {{ SHELF_LABELS[status] }}
             <span class="book-count">({{ shelves.length }})</span>
           </h3>
@@ -50,25 +50,35 @@
             :key="bookId"
             class="book-card"
           >
-            <div class="book-info">
-              <h4 class="book-title">{{ getBookTitle(bookId) }}</h4>
-              <p class="book-author">{{ getBookAuthor(bookId) }}</p>
+            <div class="book-cover-area">
+              <img 
+                v-if="bookDetails[bookId]?.volumeInfo?.imageLinks?.thumbnail" 
+                :src="bookDetails[bookId].volumeInfo.imageLinks.thumbnail" 
+                :alt="getBookTitle(bookId)" 
+                class="book-thumbnail" 
+              />
+              <div v-else class="no-cover">No Cover</div>
             </div>
-            
-            <div class="book-actions">
-              <button 
-                @click="viewBookDetails(bookId)"
-                class="view-btn"
-              >
-                View Details
-              </button>
-              <button 
-                @click="removeFromShelf(bookId, status)"
-                class="remove-btn"
-                title="Remove from shelf"
-              >
-                🗑️
-              </button>
+            <div class="book-details-column">
+              <div class="book-info">
+                <h4 class="book-title">{{ getBookTitle(bookId) }}</h4>
+                <p class="book-author">{{ getBookAuthor(bookId) }}</p>
+              </div>
+              <div class="book-actions-row">
+                <button 
+                  @click="viewBookDetails(bookId)"
+                  class="view-btn"
+                >
+                 Details
+                </button>
+                <button 
+                  @click="removeFromShelf(bookId, status)"
+                  class="remove-btn"
+                  title="Remove from shelf"
+                >
+                  <img src="../../assets/bin.png" alt="Trash icon" width="15"></img>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -251,7 +261,7 @@ export default {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #42b983;
+  border-top: 4px solid #889841;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 1rem;
@@ -265,11 +275,11 @@ export default {
 .error {
   text-align: center;
   padding: 2rem;
-  color: #dc3545;
+  color: #b52b39;
 }
 
 .retry-btn {
-  background: #dc3545;
+  background: #b52b39;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -300,7 +310,7 @@ export default {
 
 .search-link {
   display: inline-block;
-  background: #42b983;
+  background: #889841;
   color: white;
   text-decoration: none;
   padding: 0.75rem 1.5rem;
@@ -310,7 +320,7 @@ export default {
 }
 
 .search-link:hover {
-  background: #369870;
+  background: #5b662a;
 }
 
 .shelves-container {
@@ -363,6 +373,10 @@ export default {
   border-radius: 8px;
   padding: 1.5rem;
   transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: row;
+  gap: 1rem;
 }
 
 .book-card:hover {
@@ -370,39 +384,65 @@ export default {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.book-info {
-  margin-bottom: 1rem;
+.book-cover-area {
+  min-width: 60px;
+  margin-right: 1rem;
 }
 
-.book-title {
-  color: #2c3e50;
-  margin: 0 0 0.5rem 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.book-thumbnail {
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.14);
+  margin-bottom: 8px;
+  background: #fff;
 }
 
-.book-author {
-  color: #666;
-  margin: 0;
-  font-size: 0.9rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.book-actions {
+.no-cover {
+  width: 60px;
+  height: 90px;
+  background: #eee;
+  color: #999;
+  border-radius: 4px;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+}
+
+.book-details-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.book-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.book-actions-row {
+  display: flex;
+  flex-direction: row;
   gap: 0.5rem;
 }
 
+.book-author {
+  margin: 0 0 0.5rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
 .view-btn {
-  background: #42b983;
+  background: #889841;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -410,15 +450,14 @@ export default {
   font-size: 0.9rem;
   cursor: pointer;
   transition: background-color 0.2s;
-  flex: 1;
 }
 
 .view-btn:hover {
-  background: #369870;
+  background: #5b662a;
 }
 
 .remove-btn {
-  background: #dc3545;
+  background: #b52b39;
   color: white;
   border: none;
   padding: 0.5rem;
@@ -443,8 +482,24 @@ export default {
     padding: 1rem;
   }
   
-  .book-actions {
+  .book-card {
     flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .book-cover-area {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+  .book-details-column {
+    align-items: center;
+    text-align: center;
+  }
+  .book-info {
+    align-items: center;
+  }
+  .book-actions-row {
+    justify-content: center;
   }
   
   .view-btn,

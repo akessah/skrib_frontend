@@ -1,7 +1,7 @@
 <template>
   <div class="advanced-search-form">
     <div class="search-header">
-      <h3>🔍 Advanced Search</h3>
+      <h3><img src="../../assets/search-icon.png" alt="Search icon" width = "15"> Advanced Search</h3>
       <p>Search for books using multiple criteria</p>
     </div>
     
@@ -73,24 +73,6 @@
           </div>
         </div>
         
-        <!-- Tag Search Type -->
-        <div v-if="searchForm.tags.length > 1" class="tag-search-type">
-          <label class="checkbox-label">
-            <input
-              v-model="searchForm.tagIntersection"
-              type="checkbox"
-              class="checkbox"
-            />
-            <span class="checkbox-text">
-              Books must have ALL tags (intersection)
-            </span>
-          </label>
-          <p class="help-text">
-            {{ searchForm.tagIntersection 
-              ? 'Results will include books that have every specified tag' 
-              : 'Results will include books that have at least one of the specified tags' }}
-          </p>
-        </div>
       </div>
       
       <!-- Search Actions -->
@@ -221,19 +203,43 @@ export default {
       
       try {
         let results = [];
+
+        // Split tags into category-based and normal user tags
+        const categoryTags = searchForm.value.tags
+          .filter(t => t.toLowerCase().startsWith('category:'))
+          .map(t => t.slice('category:'.length).trim())
+          .filter(Boolean)
+          .flatMap(cat => cat.split('/').map(part => part.trim()).filter(part => part.length > 0));
+        const normalTags = searchForm.value.tags
+          .filter(t => !t.toLowerCase().startsWith('category:'));
+
         
-        // If we have tags, search by tags first
-        if (searchForm.value.tags.length > 0) {
-          const tagResults = await searchByTags();
+        // Search by normal tags via backend
+        if (normalTags.length > 0) {
+          const tagResults = await searchByTags(normalTags);
           results = tagResults;
+
+          if (categoryTags.length > 0 || searchForm.value.title.trim() || searchForm.value.author.trim()) {
+            const tempResults = [];
+            for (const book of results) {
+              const bookTitle = (await searchSpecificBook(book.id)).volumeInfo.title;
+              if(searchForm.value.title.trim() && searchForm.value.title.trim() !== bookTitle.trim()) {
+                continue;
+              }
+              if ((await searchByGoogleBooks(categoryTags, bookTitle, searchForm.value.author.trim())).length > 0) {
+                tempResults.push(book);
+              }
+            }
+            results = tempResults;
+          }
         }
+
         
-        // If we have title or author, search by those criteria
-        if (searchForm.value.title.trim() || searchForm.value.author.trim()) {
-          const googleResults = await searchByGoogleBooks();
+        // Search Google Books by title/author and category subjects
+        else if (searchForm.value.title.trim() || searchForm.value.author.trim() || categoryTags.length > 0) {
+          const googleResults = await searchByGoogleBooks(categoryTags);
           
           if (results.length > 0) {
-            // Intersect results if we have both tag and Google Books results
             results = intersectResults(results, googleResults);
           } else {
             results = googleResults;
@@ -251,12 +257,13 @@ export default {
       }
     };
     
-    const searchByTags = async () => {
+    const searchByTags = async (labels) => {
       try {
         const response = await apiService.getBooksByLabel(
           '', // No specific user for public tags
-          searchForm.value.tags,
-          searchForm.value.tagIntersection ? 'intersect' : 'union'
+          labels,
+          'union'
+          // searchForm.value.tagIntersection ? 'intersect' : 'union'
         );
         
         // Get book details for each book ID
@@ -277,24 +284,62 @@ export default {
       }
     };
     
-    const searchByGoogleBooks = async () => {
+    const searchByGoogleBooks = async (categorySubjects = [], title = searchForm.value.title.trim(), author = searchForm.value.author.trim()) => {
       try {
-        let query = '';
-        
-        if (searchForm.value.title.trim()) {
-          query += `intitle:${searchForm.value.title.trim()}`;
+        // Build base query (title/author only)
+        const parts = [];
+        if (title) {
+          parts.push(`intitle:${title}`);
         }
-        
-        if (searchForm.value.author.trim()) {
-          if (query) query += '+';
-          query += `inauthor:${searchForm.value.author.trim()}`;
+        if (author) {
+          parts.push(`inauthor:${author}`);
         }
-        
-        const response = await apiService.searchBooks(query, 40);
+        for(const subject of categorySubjects) {
+          parts.push(`subject:${subject}`);
+        }
+
+        // OR mode by default for categories: run one request per subject and union results
+        // if (categorySubjects.length > 0) {
+        //   const seen = new Set();
+        //   const merged = [];
+        //   for (const subject of categorySubjects) {
+        //     const term = subject.replace(/\s+/g, '+');
+        //     const query = [...parts, `subject:${term}`].join('+');
+        //     console.log('Google Books query:', query);
+        //     try {
+        //       const response = await apiService.searchBooks(query, 40);
+        //       const items = response.items || [];
+        //       for (const item of items) {
+        //         if (item?.id && !seen.has(item.id)) {
+        //           seen.add(item.id);
+        //           merged.push(item);
+        //         }
+        //       }
+        //     } catch (err) {
+        //       console.warn('Google Books subquery failed for subject:', subject, err);
+        //     }
+        //   }
+        //   return merged;
+        // }
+
+        // No categories: single request with base parts
+        const baseQuery = parts.join('+');
+        console.log('Google Books query:', baseQuery);
+        const response = await apiService.searchBooks(baseQuery, 40);
         return response.items || [];
       } catch (error) {
         console.error('Google Books search error:', error);
         return [];
+      }
+    };
+
+    const searchSpecificBook = async (bookId) => {
+      try {
+        const response = await apiService.getBookDetails(bookId);
+        return response;
+      } catch (error) {
+        console.error('Specific book search error:', error);
+        return null;
       }
     };
     
@@ -396,7 +441,7 @@ export default {
 
 .form-input:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: #889841;
   box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.1);
 }
 
@@ -442,7 +487,7 @@ export default {
 }
 
 .selected-tag {
-  background: #42b983;
+  background: #889841;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 20px;
@@ -501,6 +546,12 @@ export default {
   font-style: italic;
 }
 
+.inline-hint {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #6c4b73;
+}
+
 .form-actions {
   display: flex;
   gap: 1rem;
@@ -509,7 +560,7 @@ export default {
 }
 
 .search-btn {
-  background: #42b983;
+  background: #889841;
   color: white;
   border: none;
   padding: 0.75rem 2rem;
@@ -521,7 +572,7 @@ export default {
 }
 
 .search-btn:hover:not(:disabled) {
-  background: #369870;
+  background: #5b662a;
   transform: translateY(-2px);
 }
 
@@ -575,7 +626,7 @@ export default {
 }
 
 .no-results {
-  color: #dc3545 !important;
+  color: #b52b39 !important;
   font-weight: 500;
 }
 
