@@ -143,6 +143,8 @@ nav {
 
 .nav-links {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 2rem;
   font-size: 2.5rem;
 }

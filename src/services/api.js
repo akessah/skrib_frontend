@@ -68,6 +68,10 @@ class ApiService {
     });
   }
 
+  async logout(){
+    return this.makeRequest('/api/Authentication/logout', 'POST', {});
+  }
+
   async deleteUser(user) {
     return this.makeRequest('/api/Authentication/deleteUser', 'POST', {
       user
@@ -373,6 +377,7 @@ class ApiService {
   async getAllShelves() {
     return this.makeRequest('/api/Shelving/_getAllShelves', 'POST', {});
   }
+
 }
 
 export default new ApiService();

@@ -109,17 +109,18 @@ export default {
         this.$emit('comment-created', response.comment);
         
         // Send notification to the parent author if it's not the current user
-        if (this.parentAuthor && this.parentAuthor !== this.currentUser) {
-          const message = this.isReply 
-            ? 'Someone replied to your comment!'
-            : 'Someone commented on your post!';
-          try {
-            await this.sendNotification(this.parentAuthor, message);
-          } catch (error) {
-            console.error('Failed to send notification:', error);
-            // Don't show error to user as comment was still created successfully
-          }
-        }
+        // COMMENTED OUT: Automatic notification when someone comments on a post
+        // if (this.parentAuthor && this.parentAuthor !== this.currentUser) {
+        //   const message = this.isReply 
+        //     ? 'Someone replied to your comment!'
+        //     : 'Someone commented on your post!';
+        //   try {
+        //     await this.sendNotification(this.parentAuthor, message);
+        //   } catch (error) {
+        //     console.error('Failed to send notification:', error);
+        //     // Don't show error to user as comment was still created successfully
+        //   }
+        // }
         
         // Clear success message after 3 seconds
         setTimeout(() => {
