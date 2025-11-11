@@ -16,7 +16,7 @@
             class="notification-bell" 
             @click.stop="toggleNotifications"
           >
-            <span class="bell-icon"><img src="../../assets/bell.png" alt="Bell icon" width = "20"></span>
+            <span class="bell-icon"><img src="../assets/bell.png" alt="Bell icon" width = "20"></span>
             <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
           </div>
         </div>
