@@ -21,6 +21,9 @@ export function useAuth() {
       console.log('Session token from response:', sessionToken);
       
       if (!sessionToken) {
+        if (response.error) {
+          return { success: false, error: response.error };
+        }
         throw new Error('No session token received from server');
       }
       
@@ -47,13 +50,16 @@ export function useAuth() {
       
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: response.error || error.message };
     }
   };
 
   const register = async (username, password) => {
     try {
       const response = await apiService.register(username, password);
+      if (response.error) {
+        return { success: false, error: response.error };
+      }
       // currentUser.value = response.user;
       // currentUsername.value = username;
       // isAuthenticated.value = true;
@@ -105,9 +111,14 @@ export function useAuth() {
     }
   };
 
-  const changePassword = async (user, newPassword) => {
+  const changePassword = async (currentPassword, newPassword) => {
     try {
-      await apiService.changePassword(currentSession.value, newPassword);
+      console.log('in changePassword');
+      const result = await apiService.changePassword(currentSession.value, currentPassword, newPassword);
+      console.log('changePassword result in changePassword:', result);
+      if(result.error){
+        return { success: false, error: result.error };
+      }
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };

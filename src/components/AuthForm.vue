@@ -111,7 +111,7 @@ export default {
           error.value = result.error || 'Authentication failed. Please try again.';
         }
       } catch (err) {
-        error.value = 'An unexpected error occurred. Please try again.';
+        error.value = result.error ||'An unexpected error occurred. Please try again.';
       } finally {
         isSubmitting.value = false;
       }

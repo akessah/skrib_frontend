@@ -353,8 +353,8 @@ export default {
       return passwordForm.value.currentPassword &&
              passwordForm.value.newPassword &&
              passwordForm.value.confirmPassword &&
-             passwordForm.value.newPassword === passwordForm.value.confirmPassword &&
-             passwordForm.value.newPassword.length >= 6;
+             passwordForm.value.newPassword === passwordForm.value.confirmPassword
+            //  passwordForm.value.newPassword.length >= 6;
     });
     
     const totalCount = computed(() => notifications.value.length);
@@ -372,7 +372,13 @@ export default {
       passwordSuccess.value = null;
       
       try {
-        await changePassword(currentUser.value, passwordForm.value.newPassword);
+        console.log('in handleChangePassword');
+        const result = await changePassword(passwordForm.value.currentPassword, passwordForm.value.newPassword);
+        console.log('changePassword result in handleChangePassword:', result);
+        if(result.error){
+          passwordError.value = result.error;
+          return;
+        }
         passwordSuccess.value = 'Password changed successfully!';
         passwordForm.value = {
           currentPassword: '',

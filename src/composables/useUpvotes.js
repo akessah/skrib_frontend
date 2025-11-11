@@ -8,10 +8,20 @@ const isLoading = ref(false);
 
 export function useUpvotes() {
   const { currentSession } = useAuth();
+  // Track loading state per item to allow parallel loading
+  const loadingItems = ref(new Set());
+  
   const loadUpvotesForItem = async (itemId, currentUser) => {
-    if (isLoading.value) return;
+    // Skip if already loading this specific item
+    if (loadingItems.value.has(itemId)) {
+      // Wait for the existing load to complete
+      while (loadingItems.value.has(itemId)) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      return upvotes.value[itemId] || { count: 0, userVoted: false };
+    }
     
-    isLoading.value = true;
+    loadingItems.value.add(itemId);
     try {
       const response = await apiService.getUpvotesByItem(itemId);
       const upvoteList = response || [];
@@ -34,7 +44,7 @@ export function useUpvotes() {
       };
       return upvotes.value[itemId];
     } finally {
-      isLoading.value = false;
+      loadingItems.value.delete(itemId);
     }
   };
 
@@ -54,20 +64,13 @@ export function useUpvotes() {
       if (currentUpvotes.userVoted) {
         // User has voted, so unvote
         await apiService.unvote(currentSession.value, itemId);
-        upvotes.value[itemId] = {
-          count: Math.max(0, currentUpvotes.count - 1),
-          userVoted: false
-        };
       } else {
         // User hasn't voted, so upvote
         await apiService.upvote(currentSession.value, itemId);
-        upvotes.value[itemId] = {
-          count: currentUpvotes.count + 1,
-          userVoted: true
-        };
       }
       
-      return upvotes.value[itemId];
+      // Reload from server to ensure accuracy
+      return await loadUpvotesForItem(itemId, currentUser);
     } catch (error) {
       console.error('Failed to toggle upvote:', error);
       throw error;

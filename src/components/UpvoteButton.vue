@@ -46,12 +46,21 @@ export default {
 
     const loadUpvotes = async () => {
       try {
+        // Check if upvotes are already in cache
+        const cached = getUpvotesForItem(props.itemId);
+        if (cached && cached.count !== undefined) {
+          // Use cached data, but still refresh to ensure accuracy
+          upvoteData.value = cached;
+        }
+        // Always load fresh data to ensure accuracy
         const data = await loadUpvotesForItem(props.itemId, props.currentUser);
         upvoteData.value = data || { count: 0, userVoted: false };
       } catch (err) {
         console.error('Failed to load upvotes:', err);
         error.value = 'Failed to load upvotes';
-        upvoteData.value = { count: 0, userVoted: false };
+        // Fallback to cached data if available
+        const cached = getUpvotesForItem(props.itemId);
+        upvoteData.value = cached || { count: 0, userVoted: false };
       }
     };
 

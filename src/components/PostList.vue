@@ -2,13 +2,28 @@
   <div class="post-list">
     <div class="post-list-header">
       <h3>Community Posts</h3>
-      <button 
-        @click="refreshPosts" 
-        :disabled="isLoading"
-        class="refresh-btn"
-      >
-        {{ isLoading ? 'Loading...' : 'Refresh' }}
-      </button>
+      <div class="header-actions">
+        <div class="sort-dropdown">
+          <label for="sort-select">Sort by:</label>
+          <select 
+            id="sort-select"
+            v-model="sortBy" 
+            @change="handleSortChange"
+            class="sort-select"
+            :disabled="isLoading"
+          >
+            <option value="date">Date (Newest First)</option>
+            <option value="upvotes">Upvotes (Most First)</option>
+          </select>
+        </div>
+        <button 
+          @click="refreshPosts" 
+          :disabled="isLoading"
+          class="refresh-btn"
+        >
+          {{ isLoading ? 'Loading...' : 'Refresh' }}
+        </button>
+      </div>
     </div>
     
     <div v-if="isLoading && posts.length === 0" class="loading">
@@ -43,6 +58,7 @@ import { ref, onMounted } from 'vue';
 import PostItem from './PostItem.vue';
 import apiService from '../services/api.js';
 import { useUsers } from '../composables/useUsers.js';
+import { useUpvotes } from '../composables/useUpvotes.js';
 
 export default {
   name: 'PostList',
@@ -56,22 +72,55 @@ export default {
   emits: ['posts-loaded', 'post-upvoted'],
   setup(props, { emit }) {
     const posts = ref([]);
+    const allPosts = ref([]); // Store unsorted posts
     const isLoading = ref(false);
     const error = ref(null);
     const authorMap = ref({});
+    const sortBy = ref('date'); // 'date' or 'upvotes'
     const { fetchAllUsers, users, fetchUsernameById } = useUsers();
+    const { loadUpvotesForItems, getUpvotesForItem } = useUpvotes();
+
+    const sortPosts = async (postsToSort, sortMethod) => {
+      if (sortMethod === 'date') {
+        // Sort by date field (newest first), fallback to _id if date is not available
+        return [...postsToSort].sort((a, b) => {
+          if (a.date && b.date) {
+            return new Date(b.date) - new Date(a.date);
+          } else if (a.date) {
+            return -1; // a has date, b doesn't - a comes first
+          } else if (b.date) {
+            return 1; // b has date, a doesn't - b comes first
+          } else {
+            // Fallback to _id comparison
+            return b._id.localeCompare(a._id);
+          }
+        });
+      } else if (sortMethod === 'upvotes') {
+        // Sort by upvote count (most first)
+        // First, ensure upvotes are loaded for all posts
+        const postIds = postsToSort.map(p => p._id);
+        await loadUpvotesForItems(postIds, props.currentUser);
+        
+        return [...postsToSort].sort((a, b) => {
+          const upvotesA = getUpvotesForItem(a._id).count || 0;
+          const upvotesB = getUpvotesForItem(b._id).count || 0;
+          return upvotesB - upvotesA; // Descending order (most upvotes first)
+        });
+      }
+      return postsToSort;
+    };
 
     const loadPosts = async () => {
       isLoading.value = true;
       error.value = null;
       try {
         const response = await apiService.getAllPosts();
-        const allPosts = response || [];
-        // Sort posts by _id descending (newest first) - MongoDB ObjectIds encode creation time
-        posts.value = allPosts.sort((a, b) => {
-          // Compare ObjectIds as strings - newer IDs are lexicographically larger
-          return b._id.localeCompare(a._id);
-        });
+        const fetchedPosts = response || [];
+        allPosts.value = fetchedPosts;
+        
+        // Sort posts based on current sort method
+        posts.value = await sortPosts(fetchedPosts, sortBy.value);
+        
         // build authorMap using live API resolution
         const userIds = Array.from(new Set(posts.value.map(p => p.author)));
         const usernameMap = {};
@@ -93,6 +142,20 @@ export default {
       } catch (err) {
         error.value = err.message || 'Failed to load posts. Please try again.';
         posts.value = [];
+        allPosts.value = [];
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    const handleSortChange = async () => {
+      if (allPosts.value.length === 0) return;
+      isLoading.value = true;
+      try {
+        posts.value = await sortPosts(allPosts.value, sortBy.value);
+        emit('posts-loaded', posts.value);
+      } catch (err) {
+        error.value = err.message || 'Failed to sort posts. Please try again.';
       } finally {
         isLoading.value = false;
       }
@@ -107,14 +170,40 @@ export default {
     const handlePostUpdated = (updatedPost) => {
       const index = posts.value.findIndex(post => post._id === updatedPost._id);
       if (index !== -1) posts.value.splice(index, 1, updatedPost);
+      // Also update allPosts
+      const allIndex = allPosts.value.findIndex(post => post._id === updatedPost._id);
+      if (allIndex !== -1) allPosts.value.splice(allIndex, 1, updatedPost);
     };
     const handlePostDeleted = (postId) => {
       posts.value = posts.value.filter(post => post._id !== postId);
+      allPosts.value = allPosts.value.filter(post => post._id !== postId);
     };
-    const handlePostUpvoted = (upvoteData) => emit('post-upvoted', upvoteData);
-    const addNewPost = (post) => posts.value.unshift(post);
+    const handlePostUpvoted = async (upvoteData) => {
+      emit('post-upvoted', upvoteData);
+      // If sorting by upvotes, re-sort after upvote change
+      if (sortBy.value === 'upvotes' && allPosts.value.length > 0) {
+        posts.value = await sortPosts(allPosts.value, sortBy.value);
+      }
+    };
+    const addNewPost = (post) => {
+      allPosts.value.unshift(post);
+      posts.value.unshift(post);
+    };
 
-    return { posts, isLoading, error, authorMap, refreshPosts, handlePostUpdated, handlePostDeleted, handlePostUpvoted, addNewPost, currentUser: props.currentUser };
+    return { 
+      posts, 
+      isLoading, 
+      error, 
+      authorMap, 
+      sortBy,
+      refreshPosts, 
+      handlePostUpdated, 
+      handlePostDeleted, 
+      handlePostUpvoted, 
+      addNewPost, 
+      handleSortChange,
+      currentUser: props.currentUser 
+    };
   }
 };
 </script>
@@ -140,6 +229,45 @@ export default {
   color: #2c3e50;
   margin: 0;
   font-size: 1.5rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sort-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-dropdown label {
+  color: #2c3e50;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.sort-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  background: white;
+  color: #2c3e50;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.sort-select:hover:not(:disabled) {
+  border-color: #889841;
+}
+
+.sort-select:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .refresh-btn {

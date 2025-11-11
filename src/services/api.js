@@ -78,9 +78,10 @@ class ApiService {
     });
   }
 
-  async changePassword(session, newPassword) {
+  async changePassword(session, currentPassword, newPassword) {
     return this.makeRequest('/api/Authentication/changePassword', 'POST', {
       session,
+      currentPassword,
       newPassword
     });
   }

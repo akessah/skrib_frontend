@@ -10,14 +10,24 @@
           <router-link to="/forum" class="nav-link">Forum</router-link>
           <router-link to="/search" class="nav-link">Search</router-link>
           <router-link v-if="isAuthenticated" to="/profile" class="nav-link">Profile</router-link>
-          <div v-if="isAuthenticated" class="notification-bell" @click="toggleNotifications">
+          <div 
+            v-if="isAuthenticated" 
+            ref="notificationBell"
+            class="notification-bell" 
+            @click.stop="toggleNotifications"
+          >
             <span class="bell-icon"><img src="../../assets/bell.png" alt="Bell icon" width = "20"></span>
             <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
           </div>
         </div>
         
         <!-- Notification Dropdown -->
-        <div v-if="showNotifications && isAuthenticated" class="notification-dropdown">
+        <div 
+          v-if="showNotifications && isAuthenticated" 
+          ref="notificationDropdown"
+          class="notification-dropdown"
+          @click.stop
+        >
           <NotificationList 
             :user-id="currentUser"
             @close="showNotifications = false"
@@ -32,7 +42,8 @@
 </template>
 
 <script>
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAuth } from './composables/useAuth.js';
 import { useNotifications } from './composables/useNotifications.js';
 import NotificationList from './components/NotificationList.vue';
@@ -43,9 +54,12 @@ export default {
     NotificationList
   },
   setup() {
+    const route = useRoute();
     const auth = useAuth();
     const { unreadCount, loadUnreadNotifications } = useNotifications();
     const showNotifications = ref(false);
+    const notificationDropdown = ref(null);
+    const notificationBell = ref(null);
     
     const toggleNotifications = () => {
       showNotifications.value = !showNotifications.value;
@@ -54,8 +68,39 @@ export default {
       }
     };
     
+    const closeNotifications = () => {
+      showNotifications.value = false;
+    };
+    
+    // Handle clicks outside the notification dropdown
+    const handleClickOutside = (event) => {
+      if (!showNotifications.value) return;
+      
+      // Check if click is outside both the dropdown and the bell
+      if (
+        notificationDropdown.value &&
+        !notificationDropdown.value.contains(event.target) &&
+        notificationBell.value &&
+        !notificationBell.value.contains(event.target)
+      ) {
+        closeNotifications();
+      }
+    };
+    
+    // Watch for route changes to close notifications
+    watch(() => route.path, () => {
+      closeNotifications();
+    });
+    
     onMounted(() => {
       auth.initializeAuth();
+      // Add click listener to document
+      document.addEventListener('click', handleClickOutside);
+    });
+    
+    onUnmounted(() => {
+      // Remove click listener when component is unmounted
+      document.removeEventListener('click', handleClickOutside);
     });
     
     return {
@@ -63,7 +108,9 @@ export default {
       isAuthenticated: auth.isAuthenticated,
       unreadCount,
       showNotifications,
-      toggleNotifications
+      toggleNotifications,
+      notificationDropdown,
+      notificationBell
     };
   }
 }
