@@ -13,21 +13,33 @@
       </div>
       
       <!-- Authenticated User Section -->
-      <div v-else class="authenticated-section">
+      <div v-else-if="!isInitializing" class="authenticated-section">
+        
+        <!-- Show error if authenticated but no currentUser -->
+        <div v-if="!currentUser" class="error-message">
+          <p>Unable to load user information. Please try logging in again.</p>
+        </div>
         
         <!-- Post Creation Form -->
         <PostForm 
+          v-if="currentUser"
           :current-user="currentUser" 
           @post-created="handlePostCreated" 
         />
         
         <!-- Posts List -->
           <PostList 
+            v-if="currentUser"
             :current-user="currentUser"
             ref="postList"
             @posts-loaded="handlePostsLoaded"
             @post-upvoted="handlePostUpvoted"
           />
+      </div>
+      
+      <!-- Loading state while initializing auth -->
+      <div v-else class="loading-section">
+        <p>Loading...</p>
       </div>
     </div>
   </div>
@@ -50,6 +62,7 @@ export default {
   setup() {
     const { currentUser, currentUsername, isAuthenticated, initializeAuth } = useAuth();
     const postList = ref(null);
+    const isInitializing = ref(true);
 
     const handleAuthSuccess = () => {
       // Auth success is handled by the composable
@@ -75,14 +88,16 @@ export default {
       console.log('Post upvoted:', upvoteData);
     };
 
-    onMounted(() => {
-      initializeAuth();
+    onMounted(async () => {
+      await initializeAuth();
+      isInitializing.value = false;
     });
 
     return {
       currentUser,
       currentUsername,
       isAuthenticated,
+      isInitializing,
       postList,
       handleAuthSuccess,
       handlePostCreated,
@@ -132,6 +147,24 @@ p {
 
 .authenticated-section {
   text-align: left;
+}
+
+.loading-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  color: #666;
+}
+
+.error-message {
+  background-color: #fee;
+  color: #c33;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  border: 1px solid #fcc;
 }
 
 .user-welcome {

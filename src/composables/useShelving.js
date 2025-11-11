@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue';
 import apiService from '../services/api.js';
+import { useAuth } from './useAuth.js';
 
 // Global state for shelves
 const userShelves = ref([]);
@@ -29,6 +30,7 @@ export const SHELF_ICONS = {
 };
 
 export function useShelving() {
+  const { currentSession } = useAuth();
   const loadUserShelves = async (userId) => {
     if (!userId || isLoading.value) return;
     
@@ -68,10 +70,29 @@ export function useShelving() {
     }
   };
 
+  const getShelfIdByBookAndUser = async (bookId, userId) => {
+    try {
+      const response = await apiService.getShelfByBookAndUser(bookId, userId);
+      console.log('getShelfIdByBookAndUser: API response', response);
+      // Response should be an array with shelf object(s), or a single shelf object
+      if (Array.isArray(response) && response.length > 0) {
+        return response[0]._id || response[0];
+      } else if (response && response._id) {
+        return response._id;
+      } else if (response) {
+        return response;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to get shelf ID by book and user:', error);
+      return null;
+    }
+  };
+
   const addBookToShelf = async (userId, status, bookId) => {
     try {
       console.log('useShelving: Adding book to shelf', { userId, status, bookId });
-      const response = await apiService.addBookToShelf(userId, status, bookId);
+      const response = await apiService.addBookToShelf(currentSession.value, status, bookId);
       console.log('useShelving: API response', response);
       
       // Validate response
@@ -113,7 +134,8 @@ export function useShelving() {
 
   const removeBookFromShelf = async (shelfId) => {
     try {
-      await apiService.removeBookFromShelf(shelfId);
+      console.log('useShelving: Removing book from shelf', { shelfId });
+      await apiService.removeBookFromShelf(currentSession.value, shelfId);
       
       // Update local state
       // Find and remove from user shelves
@@ -143,7 +165,8 @@ export function useShelving() {
 
   const changeBookStatus = async (shelfId, newStatus) => {
     try {
-      await apiService.changeBookStatus(shelfId, newStatus);
+
+      await apiService.changeBookStatus(currentSession.value, shelfId, newStatus);
       
       // Update local state
       // Find the shelf and update its status
@@ -221,6 +244,7 @@ export function useShelving() {
     loadUserShelves,
     loadBookShelves,
     getUserShelfForBook,
+    getShelfIdByBookAndUser,
     addBookToShelf,
     removeBookFromShelf,
     changeBookStatus,

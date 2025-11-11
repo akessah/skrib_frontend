@@ -72,11 +72,16 @@
                  Details
                 </button>
                 <button 
-                  @click="removeFromShelf(bookId, status)"
+                  @click="() => { console.log('UserShelves: Button clicked'); removeFromShelf(bookId, status); }"
                   class="remove-btn"
                   title="Remove from shelf"
                 >
-                  <img src="../../assets/bin.png" alt="Trash icon" width="15"></img>
+                  <img 
+                    src="../../assets/bin.png" 
+                    alt="Trash icon" 
+                    width="15"
+                    style="pointer-events: none;"
+                  />
                 </button>
               </div>
             </div>
@@ -88,7 +93,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, provide } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth.js';
 import { useShelving, SHELF_LABELS, SHELF_ICONS } from '../composables/useShelving.js';
@@ -125,6 +130,7 @@ export default {
         // Load book details for all shelved books
         const allBookIds = Object.values(booksByStatus.value).flat();
         for (const bookId of allBookIds) {
+          // Load book details
           if (!bookDetails.value[bookId]) {
             try {
               const bookDetail = await apiService.getBookDetails(bookId);
@@ -167,32 +173,54 @@ export default {
     };
     
     const removeFromShelf = async (bookId, status) => {
+      console.log('UserShelves: removeFromShelf called', { bookId, status });
       if (!confirm(`Are you sure you want to remove this book from your ${SHELF_LABELS[status]} shelf?`)) {
+        console.log('UserShelves: User cancelled confirmation');
         return;
       }
       
       try {
-        // Find the shelf ID for this book
-        const bookShelves = await apiService.getShelvesByBook(bookId);
-        const userShelf = bookShelves.find(shelf => shelf.user === currentUser.value);
+        // Fetch shelf ID
+        const shelfIdResponse = await apiService.getShelfByBookAndUser(bookId, currentUser.value);
+        // Handle different response formats
+        let shelfId = null;
+        if (shelfIdResponse) {
+          if (Array.isArray(shelfIdResponse) && shelfIdResponse.length > 0) {
+            shelfId = shelfIdResponse[0].shelf || shelfIdResponse[0]._id || shelfIdResponse[0];
+          } else if (shelfIdResponse.shelf) {
+            shelfId = shelfIdResponse.shelf;
+          } else if (shelfIdResponse._id) {
+            shelfId = shelfIdResponse._id;
+          } else {
+            shelfId = shelfIdResponse;
+          }
+        }
         
-        if (!userShelf) {
+        if (!shelfId) {
+          console.log('UserShelves: Shelf not found for user');
           error.value = 'Shelf not found';
           return;
         }
         
-        const result = await removeBookFromShelf(userShelf._id);
+        console.log('UserShelves: Calling removeBookFromShelf with shelfId:', shelfId);
+        const result = await removeBookFromShelf(shelfId);
+        console.log('UserShelves: removeBookFromShelf result:', result);
         if (!result.success) {
           error.value = result.error || 'Failed to remove book from shelf';
+        } else {
+          // Remove from book details cache
+          delete bookDetails.value[bookId];
+          // Refresh shelves to update the display
+          await loadShelves();
         }
-        
-        // Remove from book details cache
-        delete bookDetails.value[bookId];
       } catch (err) {
         error.value = 'Failed to remove book from shelf. Please try again.';
         console.error('Error removing book from shelf:', err);
       }
     };
+    
+    // Provide refresh function for child components (like ShelfButton) to call
+    provide('refreshShelves', loadShelves);
     
     // Watch for authentication changes
     watch(isAuthenticated, (newValue) => {

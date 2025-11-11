@@ -25,7 +25,7 @@
           :key="comment._id"
           :comment="comment"
           :current-user="currentUser"
-          :author-map="authorMap"
+          :author-map="mergedAuthorMap"
           :auto-load-replies="autoLoadReplies"
           @comment-updated="handleCommentUpdated"
           @comment-deleted="handleCommentDeleted"
@@ -43,6 +43,7 @@
 <script>
 import CommentItem from './CommentItem.vue';
 import apiService from '../services/api.js';
+import { useUsers } from '../composables/useUsers.js';
 
 export default {
   name: 'CommentList',
@@ -72,13 +73,24 @@ export default {
     }
   },
   emits: ['comments-loaded', 'comment-upvoted'],
+  setup() {
+    const { fetchUsernameById } = useUsers();
+    return { fetchUsernameById };
+  },
   data() {
     return {
       comments: [],
       isLoading: false,
       error: null,
-      showComments: this.autoShow
+      showComments: this.autoShow,
+      commentAuthorMap: {}
     };
+  },
+  computed: {
+    mergedAuthorMap() {
+      // Merge prop authorMap with commentAuthorMap (commentAuthorMap takes precedence)
+      return { ...this.authorMap, ...this.commentAuthorMap };
+    }
   },
   async mounted() {
     // If autoShow is true, load comments automatically
@@ -87,6 +99,20 @@ export default {
     }
   },
   methods: {
+    // Recursively collect all author IDs from comments and their replies
+    collectAllAuthors(comments) {
+      const authors = new Set();
+      const collectAuthors = (items) => {
+        items.forEach(item => {
+          if (item.author) {
+            authors.add(item.author);
+          }
+        });
+      };
+      collectAuthors(comments);
+      return Array.from(authors);
+    },
+    
     async loadComments() {
       this.isLoading = true;
       this.error = null;
@@ -97,6 +123,24 @@ export default {
         console.log('Comments response:', response);
         this.comments = response || [];
         console.log('Comments loaded:', this.comments.length);
+        
+        // Build authorMap for all comment authors
+        const allAuthors = this.collectAllAuthors(this.comments);
+        const usernameMap = {};
+        for (const uid of allAuthors) {
+          if (uid && !this.commentAuthorMap[uid]) {
+            try {
+              usernameMap[uid] = await this.fetchUsernameById(uid);
+            } catch (error) {
+              console.error(`Failed to fetch username for ${uid}:`, error);
+              usernameMap[uid] = `User ${uid.slice(0, 8)}`;
+            }
+          }
+        }
+        
+        // Update commentAuthorMap with fetched usernames
+        this.commentAuthorMap = { ...this.commentAuthorMap, ...usernameMap };
+        
         this.$emit('comments-loaded', this.comments);
       } catch (error) {
         console.error('Error loading comments:', error);

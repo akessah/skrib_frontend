@@ -299,6 +299,7 @@ export default {
   setup() {
     const router = useRouter();
     const { 
+      currentSession,
       currentUser, 
       currentUsername, 
       isAuthenticated, 
@@ -387,7 +388,7 @@ export default {
     
     const handleLogout = async () => {
       try {
-        await logout();
+        await logout(currentSession.value);
         // Redirect to home page after logout
         router.push('/');
       } catch (error) {
@@ -514,8 +515,8 @@ export default {
       }
     };
     
-    onMounted(() => {
-      initializeAuth();
+    onMounted(async () => {
+      await initializeAuth();
       if (isAuthenticated.value) {
         loadUserNotifications();
         refreshTags();
@@ -523,6 +524,7 @@ export default {
     });
     
     return {
+      currentSession,
       currentUser,
       currentUsername,
       isAuthenticated,

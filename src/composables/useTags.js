@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue';
 import apiService from '../services/api.js';
+import { useAuth } from './useAuth.js';
 
 // Global state for tags
 const userTags = ref([]);
@@ -7,6 +8,7 @@ const bookTags = ref({}); // bookId -> tags array
 const isLoading = ref(false);
 
 export function useTags() {
+  const { currentSession } = useAuth();
   const loadUserTags = async (userId) => {
     if (!userId || isLoading.value) return;
     
@@ -38,7 +40,7 @@ export function useTags() {
 
   const addTag = async (userId, label, bookId) => {
     try {
-      const response = await apiService.addTag(userId, label, bookId);
+      const response = await apiService.addTag(currentSession.value, label, bookId);
       
       // Update local state
       const newTag = {
@@ -65,7 +67,7 @@ export function useTags() {
 
   const removeTag = async (tagId) => {
     try {
-      await apiService.removeTag(tagId);
+      await apiService.removeTag(currentSession.value, tagId);
       
       // Update local state
       const tagIndex = userTags.value.findIndex(tag => tag._id === tagId);
@@ -92,9 +94,9 @@ export function useTags() {
   const toggleTagPrivacy = async (tagId, isPrivate) => {
     try {
       if (isPrivate) {
-        await apiService.markTagPrivate(tagId);
+        await apiService.markTagPrivate(currentSession.value, tagId);
       } else {
-        await apiService.markTagPublic(tagId);
+        await apiService.markTagPublic(currentSession.value, tagId);
       }
       
       // Update local state

@@ -3,6 +3,7 @@
     <div class="post-header">
       <div class="post-author">
         <strong>{{ postAuthor }}</strong>
+        <span v-if="post.date" class="post-date">{{ formattedDate }}</span>
       </div>
       <div class="post-actions">
         <UpvoteButton 
@@ -71,6 +72,8 @@
 import { useRouter } from 'vue-router';
 import apiService from '../services/api.js';
 import UpvoteButton from './UpvoteButton.vue';
+import { useAuth } from '../composables/useAuth.js';
+
 
 export default {
   name: 'PostItem',
@@ -79,13 +82,15 @@ export default {
   },
   setup() {
     const router = useRouter();
+    const { currentSession } = useAuth();
     
     const navigateToPost = (postId) => {
       router.push(`/post/${postId}`);
     };
     
     return {
-      navigateToPost
+      navigateToPost,
+      currentSession
     };
   },
   props: {
@@ -117,7 +122,25 @@ export default {
       return this.post.author === this.currentUser;
     },
     postAuthor() {
+      if (!this.post.author) {
+        return 'Unknown User';
+      }
       return this.authorMap[this.post.author] || `User ${this.post.author.slice(0, 8)}`;
+    },
+    formattedDate() {
+      if (!this.post.date) return '';
+      try {
+        const date = new Date(this.post.date);
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (e) {
+        return this.post.date;
+      }
     }
   },
   methods: {
@@ -147,7 +170,7 @@ export default {
       this.error = null;
 
       try {
-        await apiService.editPost(this.post._id, this.editBody.trim());
+        await apiService.editPost(this.currentSession, this.post._id, this.editBody.trim());
         this.isEditing = false;
         this.$emit('post-updated', {
           ...this.post,
@@ -169,7 +192,7 @@ export default {
       this.error = null;
 
       try {
-        await apiService.deletePost(this.post._id);
+        await apiService.deletePost(this.currentSession, this.post._id);
         this.$emit('post-deleted', this.post._id);
       } catch (error) {
         this.error = error.message || 'Failed to delete post. Please try again.';
@@ -214,6 +237,15 @@ export default {
 .post-author {
   color: #2c3e50;
   font-size: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.post-date {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: normal;
 }
 
 .post-actions {

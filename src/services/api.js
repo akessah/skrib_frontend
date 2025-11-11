@@ -68,19 +68,19 @@ class ApiService {
     });
   }
 
-  async logout(){
-    return this.makeRequest('/api/Authentication/logout', 'POST', {});
+  async logout(session){
+    return this.makeRequest('/api/Authentication/logout', 'POST', {session});
   }
 
-  async deleteUser(user) {
+  async deleteUser(session) {
     return this.makeRequest('/api/Authentication/deleteUser', 'POST', {
-      user
+      session
     });
   }
 
-  async changePassword(user, newPassword) {
+  async changePassword(session, newPassword) {
     return this.makeRequest('/api/Authentication/changePassword', 'POST', {
-      user,
+      session,
       newPassword
     });
   }
@@ -89,22 +89,28 @@ class ApiService {
     return this.makeRequest('/api/Authentication/_getAllUsers', 'POST', {});
   }
 
+  async getUsername(user){
+    return this.makeRequest('/api/Authentication/_getUsername', 'POST', {user});
+  }
+
   // Posting endpoints
-  async createPost(user, body) {
+  async createPost(session, body) {
     return this.makeRequest('/api/Posting/createPost', 'POST', {
-      user,
+      session,
       body
     });
   }
 
-  async deletePost(post) {
+  async deletePost(session, post) {
     return this.makeRequest('/api/Posting/deletePost', 'POST', {
+      session,
       post
     });
   }
 
-  async editPost(post, newBody) {
+  async editPost(session, post, newBody) {
     return this.makeRequest('/api/Posting/editPost', 'POST', {
+      session,
       post,
       newBody
     });
@@ -121,22 +127,25 @@ class ApiService {
   }
 
   // Commenting endpoints
-  async createComment(user, body, item) {
+  async createComment(session, body, item) {
     return this.makeRequest('/api/Commenting/createComment', 'POST', {
-      user,
+      // user,
+      session,
       body,
       item
     });
   }
 
-  async deleteComment(comment) {
+  async deleteComment(session, comment) {
     return this.makeRequest('/api/Commenting/deleteComment', 'POST', {
+      session,
       comment
     });
   }
 
-  async editComment(comment, newBody) {
+  async editComment(session, comment, newBody) {
     return this.makeRequest('/api/Commenting/editComment', 'POST', {
+      session,
       comment,
       newBody
     });
@@ -159,16 +168,16 @@ class ApiService {
   }
 
   // Upvoting endpoints
-  async upvote(user, item) {
+  async upvote(session, item) {
     return this.makeRequest('/api/Upvoting/upvote', 'POST', {
-      user,
+      session,
       item
     });
   }
 
-  async unvote(user, item) {
+  async unvote(session, item) {
     return this.makeRequest('/api/Upvoting/unvote', 'POST', {
-      user,
+      session,
       item
     });
   }
@@ -197,8 +206,9 @@ class ApiService {
     });
   }
 
-  async readNotification(notification) {
+  async readNotification(session, notification) {
     return this.makeRequest('/api/Notifying/read', 'POST', {
+      session, 
       notification
     });
   }
@@ -265,28 +275,31 @@ class ApiService {
   }
 
   // Tagging endpoints
-  async addTag(user, label, book) {
+  async addTag(session, label, book) {
     return this.makeRequest('/api/Tagging/addTag', 'POST', {
-      user,
+      session,
       label,
       book
     });
   }
 
-  async removeTag(tag) {
+  async removeTag(session, tag) {
     return this.makeRequest('/api/Tagging/removeTag', 'POST', {
+      session,
       tag
     });
   }
 
-  async markTagPrivate(tag) {
+  async markTagPrivate(session, tag) {
     return this.makeRequest('/api/Tagging/markPrivate', 'POST', {
+      session,
       tag
     });
   }
 
-  async markTagPublic(tag) {
+  async markTagPublic(session,tag) {
     return this.makeRequest('/api/Tagging/markPublic', 'POST', {
+      session,
       tag
     });
   }
@@ -334,22 +347,24 @@ class ApiService {
   }
 
   // Shelving endpoints
-  async addBookToShelf(user, status, book) {
+  async addBookToShelf(session, status, book) {
     return this.makeRequest('/api/Shelving/addBook', 'POST', {
-      user,
+      session,
       status,
       book
     });
   }
 
-  async removeBookFromShelf(shelf) {
+  async removeBookFromShelf(session, shelf) {
     return this.makeRequest('/api/Shelving/removeBook', 'POST', {
+      session, 
       shelf
     });
   }
 
-  async changeBookStatus(shelf, newStatus) {
+  async changeBookStatus(session, shelf, newStatus) {
     return this.makeRequest('/api/Shelving/changeStatus', 'POST', {
+      session,
       shelf,
       newStatus
     });
@@ -376,6 +391,20 @@ class ApiService {
 
   async getAllShelves() {
     return this.makeRequest('/api/Shelving/_getAllShelves', 'POST', {});
+  }
+
+  async getShelfByBookAndUser(book, owner) {
+    return this.makeRequest('/api/Shelving/_getShelfByBookAndOwner', 'POST', {
+      book,
+      owner
+    });
+  }
+
+  //Session endpoints
+  async getUser(session){
+    return this.makeRequest('/api/Sessioning/_getUser', 'POST', {
+      session
+    });
   }
 
 }

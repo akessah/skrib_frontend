@@ -1,11 +1,13 @@
 import { ref } from 'vue';
 import apiService from '../services/api.js';
+import { useAuth } from './useAuth.js';
 
 // Global state for upvotes
 const upvotes = ref({}); // itemId -> { count: number, userVoted: boolean }
 const isLoading = ref(false);
 
 export function useUpvotes() {
+  const { currentSession } = useAuth();
   const loadUpvotesForItem = async (itemId, currentUser) => {
     if (isLoading.value) return;
     
@@ -51,14 +53,14 @@ export function useUpvotes() {
     try {
       if (currentUpvotes.userVoted) {
         // User has voted, so unvote
-        await apiService.unvote(currentUser, itemId);
+        await apiService.unvote(currentSession.value, itemId);
         upvotes.value[itemId] = {
           count: Math.max(0, currentUpvotes.count - 1),
           userVoted: false
         };
       } else {
         // User hasn't voted, so upvote
-        await apiService.upvote(currentUser, itemId);
+        await apiService.upvote(currentSession.value, itemId);
         upvotes.value[itemId] = {
           count: currentUpvotes.count + 1,
           userVoted: true

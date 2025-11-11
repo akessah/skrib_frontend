@@ -44,6 +44,7 @@
 
 <script>
 import apiService from '../services/api.js';
+import { useAuth } from '../composables/useAuth.js';
 
 export default {
   name: 'PostForm',
@@ -54,6 +55,13 @@ export default {
     }
   },
   emits: ['post-created'],
+  setup() {
+    const { currentSession } = useAuth();
+    
+    return {
+      currentSession
+    };
+  },
   data() {
     return {
       postBody: '',
@@ -74,7 +82,7 @@ export default {
       this.success = null;
 
       try {
-        const response = await apiService.createPost(this.currentUser, this.postBody.trim());
+        const response = await apiService.createPost(this.currentSession, this.postBody.trim());
         this.success = 'Post created successfully!';
         this.clearForm();
         this.$emit('post-created', response.post);

@@ -3,6 +3,7 @@
     <div class="comment-header">
       <div class="comment-author">
         <strong>{{ commentAuthor }}</strong>
+        <span v-if="comment.date" class="comment-date">{{ formattedDate }}</span>
       </div>
       <div class="comment-actions">
         <UpvoteButton 
@@ -98,7 +99,7 @@
           :key="reply._id"
           :comment="reply"
           :current-user="currentUser"
-          :author-map="authorMap"
+          :author-map="mergedAuthorMap"
           :auto-load-replies="autoLoadReplies"
           @comment-updated="handleReplyUpdated"
           @comment-deleted="handleReplyDeleted"
@@ -113,6 +114,7 @@
 import apiService from '../services/api.js';
 import UpvoteButton from './UpvoteButton.vue';
 import CommentForm from './CommentForm.vue';
+import { useUsers } from '../composables/useUsers.js';
 
 export default {
   name: 'CommentItem',
@@ -139,6 +141,10 @@ export default {
     }
   },
   emits: ['comment-updated', 'comment-deleted', 'comment-upvoted'],
+  setup() {
+    const { fetchUsernameById } = useUsers();
+    return { fetchUsernameById };
+  },
   async mounted() {
     // If autoLoadReplies is true, load replies automatically
     if (this.autoLoadReplies) {
@@ -154,16 +160,39 @@ export default {
       isReplying: false,
       replies: [],
       showReplies: false,
-      error: null
+      error: null,
+      replyAuthorMap: {}
     };
   },
   computed: {
+    mergedAuthorMap() {
+      // Merge prop authorMap with replyAuthorMap (replyAuthorMap takes precedence)
+      return { ...this.authorMap, ...this.replyAuthorMap };
+    },
     isAuthor() {
       return this.comment.author === this.currentUser;
     },
     commentAuthor() {
-      // Try to get username from authorMap, fallback to author ID
-      return this.authorMap[this.comment.author] || `User ${this.comment.author.slice(0, 8)}`;
+      // Try to get username from mergedAuthorMap, fallback to author ID
+      if (!this.comment.author) {
+        return 'Unknown User';
+      }
+      return this.mergedAuthorMap[this.comment.author] || `User ${this.comment.author.slice(0, 8)}`;
+    },
+    formattedDate() {
+      if (!this.comment.date) return '';
+      try {
+        const date = new Date(this.comment.date);
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (e) {
+        return this.comment.date;
+      }
     }
   },
   methods: {
@@ -193,7 +222,7 @@ export default {
       this.error = null;
 
       try {
-        await apiService.editComment(this.comment._id, this.editBody.trim());
+        await apiService.editComment(this.currentSession, this.comment._id, this.editBody.trim());
         this.isEditing = false;
         this.$emit('comment-updated', {
           ...this.comment,
@@ -215,7 +244,7 @@ export default {
       this.error = null;
 
       try {
-        await apiService.deleteComment(this.comment._id);
+        await apiService.deleteComment(this.currentSession, this.comment._id);
         this.$emit('comment-deleted', this.comment._id);
       } catch (error) {
         this.error = error.message || 'Failed to delete comment. Please try again.';
@@ -250,6 +279,26 @@ export default {
         console.log('Replies response:', response);
         this.replies = response || [];
         console.log('Replies loaded:', this.replies.length);
+        
+        // Build authorMap for reply authors
+        const replyAuthors = this.replies
+          .map(reply => reply.author)
+          .filter(author => author && !this.mergedAuthorMap[author]);
+        
+        const usernameMap = {};
+        for (const uid of replyAuthors) {
+          if (uid) {
+            try {
+              usernameMap[uid] = await this.fetchUsernameById(uid);
+            } catch (error) {
+              console.error(`Failed to fetch username for ${uid}:`, error);
+              usernameMap[uid] = `User ${uid.slice(0, 8)}`;
+            }
+          }
+        }
+        
+        // Update replyAuthorMap with fetched usernames
+        this.replyAuthorMap = { ...this.replyAuthorMap, ...usernameMap };
       } catch (error) {
         console.error('Failed to load replies:', error);
         this.replies = [];
@@ -303,6 +352,15 @@ export default {
 .comment-author {
   color: #2c3e50;
   font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.comment-date {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: normal;
 }
 
 .comment-actions {

@@ -32,6 +32,9 @@ export function useUsers() {
   };
 
   const getUserById = (userId) => {
+    if (!userId) {
+      return 'Unknown User';
+    }
     return users.value[userId] || `User ${userId.slice(0, 8)}`;
   };
 
@@ -57,10 +60,13 @@ export function useUsers() {
 
   // Add a direct lookup by userId using authentication API
   const fetchUsernameById = async (userId) => {
+    if (!userId) {
+      return 'Unknown User';
+    }
     if (users.value[userId]) return users.value[userId];
     try {
-      const result = await apiService.makeRequest('/api/Authentication/_getUserById', 'POST', { user: userId });
-      const username = result?.username || `User ${userId.slice(0,8)}`;
+      const result = await apiService.makeRequest('/api/Authentication/_getUsername', 'POST', { user: userId });
+      const username = result[0]?.username || `User ${userId.slice(0,8)}`;
       users.value[userId] = username;
       return username;
     } catch (e) {

@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue';
 import apiService from '../services/api.js';
+import { useAuth } from './useAuth.js';
 
 // Global state for notifications
 const notifications = ref([]);
@@ -7,6 +8,7 @@ const isLoading = ref(false);
 const lastChecked = ref(null);
 
 export function useNotifications() {
+  const { currentSession } = useAuth();
   const loadNotifications = async (userId) => {
     if (!userId || isLoading.value) return;
     
@@ -54,7 +56,7 @@ export function useNotifications() {
 
   const markAsRead = async (notificationId) => {
     try {
-      await apiService.readNotification(notificationId);
+      await apiService.readNotification(currentSession.value, notificationId);
       // Update local state
       const notification = notifications.value.find(n => n._id === notificationId);
       if (notification) {

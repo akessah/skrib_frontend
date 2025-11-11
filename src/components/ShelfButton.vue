@@ -31,6 +31,7 @@
         </div>
         
         <div class="shelf-actions">
+          <!-- Debug: currentStatus={{ currentStatus }}, isLoading={{ isLoading }} -->
           <select 
             v-model="newStatus" 
             @change="handleChangeStatus"
@@ -49,12 +50,17 @@
           </select>
           
           <button 
-            @click="handleRemoveFromShelf"
+            @click="() => { console.log('Button clicked directly'); handleRemoveFromShelf(); }"
             class="remove-btn"
             :disabled="isLoading"
             title="Remove from shelf"
           >
-            <img src="../../assets/bin.png" alt="Trash icon" width = "15"></img>
+            <img 
+              src="../../assets/bin.png" 
+              alt="Trash icon" 
+              width="15"
+              style="pointer-events: none;"
+            />
           </button>
         </div>
       </div>
@@ -71,7 +77,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, inject } from 'vue';
 import { useAuth } from '../composables/useAuth.js';
 import { useShelving, SHELF_STATUS, SHELF_LABELS, SHELF_ICONS } from '../composables/useShelving.js';
 
@@ -84,9 +90,12 @@ export default {
     }
   },
   setup(props) {
+    // Inject refresh function if available (provided by UserShelves component)
+    const refreshShelves = inject('refreshShelves', null);
     const { currentUser, isAuthenticated } = useAuth();
     const { 
       getUserShelfForBook, 
+      getShelfIdByBookAndUser,
       addBookToShelf, 
       removeBookFromShelf, 
       changeBookStatus,
@@ -133,6 +142,10 @@ export default {
           const statusLabel = SHELF_LABELS[selectedStatus.value];
           selectedStatus.value = '';
           success.value = `Added to ${statusLabel} shelf!`;
+          // Refresh shelves on home page if available
+          if (refreshShelves) {
+            refreshShelves();
+          }
           setTimeout(() => {
             success.value = null;
           }, 3000);
@@ -155,20 +168,25 @@ export default {
       success.value = null;
       
       try {
-        // Find the shelf ID for this book
-        const bookShelves = await loadBookShelves(props.bookId);
-        const userShelf = bookShelves.find(shelf => shelf.user === currentUser.value);
+        // Fetch shelf ID
+        const shelfIdResponse = await getShelfIdByBookAndUser(props.bookId, currentUser.value);
+        const currentShelfId = shelfIdResponse?.shelf || shelfIdResponse;
         
-        if (!userShelf) {
+        if (!currentShelfId) {
           error.value = 'Shelf not found';
           return;
         }
         
-        const result = await changeBookStatus(userShelf._id, newStatus.value);
+        const result = await changeBookStatus(currentShelfId, newStatus.value);
         if (result.success) {
           currentStatus.value = newStatus.value;
+          const statusLabel = SHELF_LABELS[newStatus.value];
           newStatus.value = '';
-          success.value = `Moved to ${SHELF_LABELS[newStatus.value]} shelf!`;
+          success.value = `Moved to ${statusLabel} shelf!`;
+          // Refresh shelves on home page if available
+          if (refreshShelves) {
+            refreshShelves();
+          }
           setTimeout(() => {
             success.value = null;
           }, 3000);
@@ -183,9 +201,14 @@ export default {
     };
     
     const handleRemoveFromShelf = async () => {
-      if (!currentUser.value) return;
+      console.log('ShelfButton: handleRemoveFromShelf called');
+      if (!currentUser.value) {
+        console.log('ShelfButton: No current user, returning early');
+        return;
+      }
       
       if (!confirm('Are you sure you want to remove this book from your shelf?')) {
+        console.log('ShelfButton: User cancelled confirmation');
         return;
       }
       
@@ -194,19 +217,26 @@ export default {
       success.value = null;
       
       try {
-        // Find the shelf ID for this book
-        const bookShelves = await loadBookShelves(props.bookId);
-        const userShelf = bookShelves.find(shelf => shelf.user === currentUser.value);
+        // Fetch shelf ID
+        const shelfIdResponse = await getShelfIdByBookAndUser(props.bookId, currentUser.value);
+        const currentShelfId = shelfIdResponse?.shelf || shelfIdResponse;
         
-        if (!userShelf) {
+        if (!currentShelfId) {
+          console.log('ShelfButton: Shelf not found for user');
           error.value = 'Shelf not found';
           return;
         }
         
-        const result = await removeBookFromShelf(userShelf._id);
+        console.log('ShelfButton: Calling removeBookFromShelf with shelfId:', currentShelfId);
+        const result = await removeBookFromShelf(currentShelfId);
+        console.log('ShelfButton: removeBookFromShelf result:', result);
         if (result.success) {
           currentStatus.value = null;
           success.value = 'Removed from shelf!';
+          // Refresh shelves on home page if available
+          if (refreshShelves) {
+            refreshShelves();
+          }
           setTimeout(() => {
             success.value = null;
           }, 3000);

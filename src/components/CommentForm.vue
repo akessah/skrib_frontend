@@ -43,6 +43,7 @@
 <script>
 import apiService from '../services/api.js';
 import { useNotifications } from '../composables/useNotifications.js';
+import { useAuth } from '../composables/useAuth.js';
 
 export default {
   name: 'CommentForm',
@@ -67,9 +68,11 @@ export default {
   emits: ['comment-created'],
   setup() {
     const { sendNotification } = useNotifications();
+    const { currentSession } = useAuth();
     
     return {
-      sendNotification
+      sendNotification,
+      currentSession
     };
   },
   computed: {
@@ -100,7 +103,7 @@ export default {
         // Use parentId for replies, postId for top-level comments
         const targetId = this.parentId || this.postId;
         const response = await apiService.createComment(
-          this.currentUser, 
+          this.currentSession, 
           this.commentBody.trim(), 
           targetId
         );

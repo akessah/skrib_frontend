@@ -78,6 +78,7 @@ export default {
         for (const uid of userIds) {
           usernameMap[uid] = await fetchUsernameById(uid);
         }
+        console.log(`usernameMap: ${usernameMap}`);
         // always use usernameMap for user lookups
         const map = {};
         posts.value.forEach(post => {

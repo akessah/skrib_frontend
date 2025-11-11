@@ -35,6 +35,7 @@
         <div class="post-header">
           <div class="post-author">
             <strong>{{ postAuthor }}</strong>
+            <span v-if="post.date" class="post-date">{{ formattedDate }}</span>
           </div>
           <div class="post-actions">
             <UpvoteButton 
@@ -142,7 +143,7 @@ export default {
   setup() {
     const route = useRoute();
     const router = useRouter();
-    const { currentUser, currentUsername, isAuthenticated, initializeAuth } = useAuth();
+    const { currentSession, currentUser, currentUsername, isAuthenticated, initializeAuth } = useAuth();
     const { fetchAllUsers, buildAuthorMap: buildUserMap, fetchUsernameById } = useUsers();
     
     const post = ref(null);
@@ -160,6 +161,22 @@ export default {
     const postAuthor = computed(() => {
       if (!post.value || !post.value.author) return '';
       return authorMap.value[post.value.author] || `User ${post.value.author.slice(0, 8)}`;
+    });
+    
+    const formattedDate = computed(() => {
+      if (!post.value || !post.value.date) return '';
+      try {
+        const date = new Date(post.value.date);
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (e) {
+        return post.value.date;
+      }
     });
     
     const isAuthor = computed(() => {
@@ -217,8 +234,9 @@ export default {
       
       isUpdating.value = true;
       try {
-        const updatedPost = await apiService.editPost(post.value, editBody.value.trim());
-        post.value = updatedPost;
+        await apiService.editPost(currentSession.value, post.value._id, editBody.value.trim());
+        // API returns empty object, so manually update the post body
+        post.value.body = editBody.value.trim();
         isEditing.value = false;
       } catch (err) {
         error.value = err.message || 'Failed to update post';
@@ -234,7 +252,7 @@ export default {
       
       isDeleting.value = true;
       try {
-        await apiService.deletePost(post.value);
+        await apiService.deletePost(currentSession.value, post.value._id);
         router.push('/forum');
       } catch (err) {
         error.value = err.message || 'Failed to delete post';
@@ -298,7 +316,9 @@ export default {
       isUpdating,
       isDeleting,
       postAuthor,
+      formattedDate,
       isAuthor,
+      currentSession,
       handleAuthSuccess,
       toggleEdit,
       handleUpdate,
@@ -392,6 +412,15 @@ export default {
 .post-author {
   color: #2c3e50;
   font-size: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.post-date {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: normal;
 }
 
 .post-actions {
