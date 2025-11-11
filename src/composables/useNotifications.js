@@ -14,8 +14,8 @@ export function useNotifications() {
     
     isLoading.value = true;
     try {
-      const response = await apiService.getNotificationsByUser(userId);
-      notifications.value = response || [];
+      const response = await apiService.getNotificationsByUser(currentSession.value);
+      notifications.value = response.notification || [];
       lastChecked.value = new Date();
     } catch (error) {
       console.error('Failed to load notifications:', error);
@@ -30,7 +30,8 @@ export function useNotifications() {
     
     isLoading.value = true;
     try {
-      const response = await apiService.getUnreadNotificationsByUser(userId);
+      const response = await apiService.getUnreadNotificationsByUser(currentSession.value);
+      response = response.notification || [];
       // Merge with existing notifications, updating unread status
       const unreadIds = new Set(response.map(n => n._id));
       notifications.value = notifications.value.map(notification => ({

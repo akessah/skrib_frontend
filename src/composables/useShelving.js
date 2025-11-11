@@ -36,8 +36,8 @@ export function useShelving() {
     
     isLoading.value = true;
     try {
-      const response = await apiService.getBooksByUser(userId);
-      userShelves.value = response || [];
+      const response = await apiService.getBooksByUser(currentSession.value);
+      userShelves.value = response.shelf || [];
     } catch (error) {
       console.error('Failed to load user shelves:', error);
       userShelves.value = [];
@@ -62,7 +62,8 @@ export function useShelving() {
 
   const getUserShelfForBook = async (userId, bookId) => {
     try {
-      const response = await apiService.getUserShelfByBook(userId, bookId);
+      const response = await apiService.getUserShelfByBook(currentSession.value, bookId);
+      response = [response.shelfNumber] || [];
       return response && response.length > 0 ? response[0].status : null;
     } catch (error) {
       console.error('Failed to get user shelf for book:', error);
@@ -70,9 +71,10 @@ export function useShelving() {
     }
   };
 
-  const getShelfIdByBookAndUser = async (bookId, userId) => {
+  const getShelfIdByBookAndUser = async (bookId) => {
     try {
-      const response = await apiService.getShelfByBookAndUser(bookId, userId);
+      console.log('getShelfIdByBookAndUser: Calling API with session:', currentSession.value, 'and book:', bookId);
+      const response = await apiService.getShelfByBookAndUser(currentSession.value, bookId);
       console.log('getShelfIdByBookAndUser: API response', response);
       // Response should be an array with shelf object(s), or a single shelf object
       if (Array.isArray(response) && response.length > 0) {

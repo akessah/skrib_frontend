@@ -24,7 +24,7 @@ export function useAuth() {
         throw new Error('No session token received from server');
       }
       
-      currentSession.value = sessionToken;
+      sessionToken;
       currentUsername.value = username;
       
       // Store in localStorage for persistence

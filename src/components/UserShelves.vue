@@ -103,7 +103,7 @@ export default {
   name: 'UserShelves',
   setup() {
     const router = useRouter();
-    const { currentUser, isAuthenticated } = useAuth();
+    const { currentSession, currentUser, isAuthenticated } = useAuth();
     const { 
       getBooksByStatus, 
       getTotalShelvedBooks, 
@@ -181,7 +181,7 @@ export default {
       
       try {
         // Fetch shelf ID
-        const shelfIdResponse = await apiService.getShelfByBookAndUser(bookId, currentUser.value);
+        const shelfIdResponse = await apiService.getShelfByBookAndUser(currentSession.value, bookId);
         // Handle different response formats
         let shelfId = null;
         if (shelfIdResponse) {

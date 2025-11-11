@@ -43,24 +43,24 @@ export default {
     NotificationList
   },
   setup() {
-    const { currentUser, isAuthenticated, initializeAuth } = useAuth();
+    const auth = useAuth();
     const { unreadCount, loadUnreadNotifications } = useNotifications();
     const showNotifications = ref(false);
     
     const toggleNotifications = () => {
       showNotifications.value = !showNotifications.value;
-      if (showNotifications.value && currentUser.value) {
-        loadUnreadNotifications(currentUser.value);
+      if (showNotifications.value && auth.currentUser.value) {
+        loadUnreadNotifications(auth.currentUser.value);
       }
     };
     
     onMounted(() => {
-      initializeAuth();
+      auth.initializeAuth();
     });
     
     return {
-      currentUser,
-      isAuthenticated,
+      currentUser: auth.currentUser,
+      isAuthenticated: auth.isAuthenticated,
       unreadCount,
       showNotifications,
       toggleNotifications

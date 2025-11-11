@@ -14,8 +14,8 @@ export function useTags() {
     
     isLoading.value = true;
     try {
-      const response = await apiService.getTagsByUser(userId);
-      userTags.value = response || [];
+      const response = await apiService.getTagsByUser(currentSession.value);
+      userTags.value = response.tag || [];
     } catch (error) {
       console.error('Failed to load user tags:', error);
       userTags.value = [];
@@ -28,8 +28,8 @@ export function useTags() {
     if (!userId || !bookId) return;
     
     try {
-      const response = await apiService.getTagsByBook(userId, bookId);
-      bookTags.value[bookId] = response || [];
+      const response = await apiService.getTagsByBook(currentSession.value, bookId);
+      bookTags.value[bookId] = response.tag || [];
       return response || [];
     } catch (error) {
       console.error('Failed to load book tags:', error);

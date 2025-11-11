@@ -213,21 +213,21 @@ class ApiService {
     });
   }
 
-  async getNotificationsByUser(recipient) {
+  async getNotificationsByUser(session) {
     return this.makeRequest('/api/Notifying/_getNotificationsByUser', 'POST', {
-      recipient
+      session
     });
   }
 
-  async getReadNotificationsByUser(recipient) {
+  async getReadNotificationsByUser(session) {
     return this.makeRequest('/api/Notifying/_getReadNotificationsByUser', 'POST', {
-      recipient
+      session
     });
   }
 
-  async getUnreadNotificationsByUser(recipient) {
+  async getUnreadNotificationsByUser(session) {
     return this.makeRequest('/api/Notifying/_getUnreadNotificationsByUser', 'POST', {
-      recipient
+      session
     });
   }
 
@@ -304,16 +304,16 @@ class ApiService {
     });
   }
 
-  async getTagsByBook(user, book) {
+  async getTagsByBook(session, book) {
     return this.makeRequest('/api/Tagging/_getTagsByBook', 'POST', {
-      user,
+      session,
       book
     });
   }
 
-  async getLabelsByBook(user, book) {
+  async getLabelsByBook(session, book) {
     return this.makeRequest('/api/Tagging/_getLabelsByBook', 'POST', {
-      user,
+      session,
       book
     });
   }
@@ -326,9 +326,9 @@ class ApiService {
     });
   }
 
-  async getTagsByUser(user) {
+  async getTagsByUser(session) {
     return this.makeRequest('/api/Tagging/_getTagsByUser', 'POST', {
-      user
+      session
     });
   }
 
@@ -370,9 +370,9 @@ class ApiService {
     });
   }
 
-  async getUserShelfByBook(user, book) {
+  async getUserShelfByBook(session, book) {
     return this.makeRequest('/api/Shelving/_getUserShelfByBook', 'POST', {
-      user,
+      session,
       book
     });
   }
@@ -383,9 +383,9 @@ class ApiService {
     });
   }
 
-  async getBooksByUser(user) {
+  async getBooksByUser(session) {
     return this.makeRequest('/api/Shelving/_getBooksByUser', 'POST', {
-      user
+      session
     });
   }
 
@@ -393,10 +393,10 @@ class ApiService {
     return this.makeRequest('/api/Shelving/_getAllShelves', 'POST', {});
   }
 
-  async getShelfByBookAndUser(book, owner) {
+  async getShelfByBookAndUser(session, book) {
     return this.makeRequest('/api/Shelving/_getShelfByBookAndOwner', 'POST', {
-      book,
-      owner
+      session,
+      book
     });
   }
 
