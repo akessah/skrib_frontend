@@ -30,7 +30,7 @@ export function useTags() {
     try {
       const response = await apiService.getTagsByBook(currentSession.value, bookId);
       bookTags.value[bookId] = response.tag || [];
-      return response || [];
+      return response.tag || [];
     } catch (error) {
       console.error('Failed to load book tags:', error);
       bookTags.value[bookId] = [];
