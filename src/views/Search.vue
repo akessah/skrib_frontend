@@ -43,10 +43,9 @@
           <ul>
             <li><strong>Title Search:</strong> Enter part or all of a book title</li>
             <li><strong>Author Search:</strong> Enter the author's name</li>
-            <li><strong>Tag Search:</strong> Add tags to find books with specific labels</li>
+            <li><strong>User Tags:</strong> Add user-created tags to find books with specific labels</li>
+            <li><strong>Category Tags:</strong> Add category tags to filter by Google Books categories (e.g., Fiction, Science, History)</li>
             <li><strong>Combined Search:</strong> Use multiple criteria for precise results</li>
-            <li><strong>Tag Options:</strong> Choose "all tags" for books that must have every tag</li>
-            <li><strong>Google Books:</strong> Preface tag with "category:" to filter by Google Books categories</li>
           </ul>
         </div>
       </div>

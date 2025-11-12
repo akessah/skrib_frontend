@@ -30,24 +30,24 @@
         />
       </div>
       
-      <!-- Tag Search -->
+      <!-- User Tags Search -->
       <div class="form-group">
-        <label for="tags">Tags</label>
+        <label for="user-tags">User Tags</label>
         <div class="tag-input-container">
           <input
-            id="tags"
-            v-model="tagInput"
+            id="user-tags"
+            v-model="userTagInput"
             type="text"
-            placeholder="Enter tags (press Enter to add)..."
+            placeholder="Enter user-created tags (press Enter to add)..."
             class="form-input"
-            @keydown.enter.prevent="addTag"
-            @input="handleTagInput"
+            @keydown.enter.prevent="addUserTag"
+            @input="handleUserTagInput"
           />
-          <div v-if="tagSuggestions.length > 0" class="tag-suggestions">
+          <div v-if="userTagSuggestions.length > 0" class="tag-suggestions">
             <div
-              v-for="suggestion in tagSuggestions"
+              v-for="suggestion in userTagSuggestions"
               :key="suggestion"
-              @click="selectTagSuggestion(suggestion)"
+              @click="selectUserTagSuggestion(suggestion)"
               class="tag-suggestion"
             >
               {{ suggestion }}
@@ -55,24 +55,57 @@
           </div>
         </div>
         
-        <!-- Selected Tags -->
-        <div v-if="searchForm.tags.length > 0" class="selected-tags">
+        <!-- Selected User Tags -->
+        <div v-if="searchForm.userTags.length > 0" class="selected-tags">
           <div
-            v-for="(tag, index) in searchForm.tags"
+            v-for="(tag, index) in searchForm.userTags"
             :key="index"
-            class="selected-tag"
+            class="selected-tag user-tag"
           >
             {{ tag }}
             <button
               type="button"
-              @click="removeTag(index)"
+              @click="removeUserTag(index)"
               class="remove-tag-btn"
             >
               ×
             </button>
           </div>
         </div>
+      </div>
+      
+      <!-- Category Tags Search -->
+      <div class="form-group">
+        <label for="category-tags">Category Tags</label>
+        <div class="tag-input-container">
+          <input
+            id="category-tags"
+            v-model="categoryTagInput"
+            type="text"
+            placeholder="Enter category tags (e.g., Fiction, Science, press Enter to add)..."
+            class="form-input"
+            @keydown.enter.prevent="addCategoryTag"
+          />
+        </div>
         
+        <!-- Selected Category Tags -->
+        <div v-if="searchForm.categoryTags.length > 0" class="selected-tags">
+          <div
+            v-for="(tag, index) in searchForm.categoryTags"
+            :key="index"
+            class="selected-tag category-tag"
+          >
+            {{ tag }}
+            <button
+              type="button"
+              @click="removeCategoryTag(index)"
+              class="remove-tag-btn"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+        <p class="help-text">Category tags filter by Google Books categories (e.g., Fiction, Science, History)</p>
       </div>
       
       <!-- Search Actions -->
@@ -123,12 +156,14 @@ export default {
     const searchForm = ref({
       title: '',
       author: '',
-      tags: [],
+      userTags: [],
+      categoryTags: [],
       tagIntersection: false
     });
     
-    const tagInput = ref('');
-    const tagSuggestions = ref([]);
+    const userTagInput = ref('');
+    const categoryTagInput = ref('');
+    const userTagSuggestions = ref([]);
     const isSearching = ref(false);
     const hasSearched = ref(false);
     const searchResults = ref([]);
@@ -137,7 +172,8 @@ export default {
     const hasSearchCriteria = computed(() => {
       return searchForm.value.title.trim() || 
              searchForm.value.author.trim() || 
-             searchForm.value.tags.length > 0;
+             searchForm.value.userTags.length > 0 ||
+             searchForm.value.categoryTags.length > 0;
     });
     
     const loadPublicTags = async () => {
@@ -149,47 +185,61 @@ export default {
       }
     };
     
-    const handleTagInput = () => {
-      const input = tagInput.value.toLowerCase().trim();
+    const handleUserTagInput = () => {
+      const input = userTagInput.value.toLowerCase().trim();
       if (input.length > 0) {
-        tagSuggestions.value = allPublicTags.value
+        userTagSuggestions.value = allPublicTags.value
           .filter(tag => tag.toLowerCase().includes(input))
           .slice(0, 5);
       } else {
-        tagSuggestions.value = [];
+        userTagSuggestions.value = [];
       }
     };
     
-    const addTag = () => {
-      const tag = tagInput.value.trim();
-      if (tag && !searchForm.value.tags.includes(tag)) {
-        searchForm.value.tags.push(tag);
-        tagInput.value = '';
-        tagSuggestions.value = [];
+    const addUserTag = () => {
+      const tag = userTagInput.value.trim();
+      if (tag && !searchForm.value.userTags.includes(tag)) {
+        searchForm.value.userTags.push(tag);
+        userTagInput.value = '';
+        userTagSuggestions.value = [];
       }
     };
     
-    const selectTagSuggestion = (suggestion) => {
-      if (!searchForm.value.tags.includes(suggestion)) {
-        searchForm.value.tags.push(suggestion);
-        tagInput.value = '';
-        tagSuggestions.value = [];
+    const selectUserTagSuggestion = (suggestion) => {
+      if (!searchForm.value.userTags.includes(suggestion)) {
+        searchForm.value.userTags.push(suggestion);
+        userTagInput.value = '';
+        userTagSuggestions.value = [];
       }
     };
     
-    const removeTag = (index) => {
-      searchForm.value.tags.splice(index, 1);
+    const removeUserTag = (index) => {
+      searchForm.value.userTags.splice(index, 1);
+    };
+    
+    const addCategoryTag = () => {
+      const tag = categoryTagInput.value.trim();
+      if (tag && !searchForm.value.categoryTags.includes(tag)) {
+        searchForm.value.categoryTags.push(tag);
+        categoryTagInput.value = '';
+      }
+    };
+    
+    const removeCategoryTag = (index) => {
+      searchForm.value.categoryTags.splice(index, 1);
     };
     
     const clearForm = () => {
       searchForm.value = {
         title: '',
         author: '',
-        tags: [],
+        userTags: [],
+        categoryTags: [],
         tagIntersection: false
       };
-      tagInput.value = '';
-      tagSuggestions.value = [];
+      userTagInput.value = '';
+      categoryTagInput.value = '';
+      userTagSuggestions.value = [];
       searchResults.value = [];
       hasSearched.value = false;
     };
@@ -204,17 +254,14 @@ export default {
       try {
         let results = [];
 
-        // Split tags into category-based and normal user tags
-        const categoryTags = searchForm.value.tags
-          .filter(t => t.toLowerCase().startsWith('category:'))
-          .map(t => t.slice('category:'.length).trim())
+        // Get category tags and user tags from separate fields
+        const categoryTags = searchForm.value.categoryTags
           .filter(Boolean)
           .flatMap(cat => cat.split('/').map(part => part.trim()).filter(part => part.length > 0));
-        const normalTags = searchForm.value.tags
-          .filter(t => !t.toLowerCase().startsWith('category:'));
+        const normalTags = searchForm.value.userTags;
 
         
-        // Search by normal tags via backend
+        // Search by user tags via backend
         if (normalTags.length > 0) {
           const tagResults = await searchByTags(normalTags);
           results = tagResults;
@@ -222,7 +269,9 @@ export default {
           if (categoryTags.length > 0 || searchForm.value.title.trim() || searchForm.value.author.trim()) {
             const tempResults = [];
             for (const book of results) {
-              const bookTitle = (await searchSpecificBook(book.id)).volumeInfo.title;
+              const bookDetail = await searchSpecificBook(book.id);
+              if (!bookDetail) continue;
+              const bookTitle = bookDetail.volumeInfo?.title || '';
               if(searchForm.value.title.trim() && searchForm.value.title.trim() !== bookTitle.trim()) {
                 continue;
               }
@@ -356,10 +405,13 @@ export default {
       if (searchForm.value.author.trim()) {
         criteria.push(`author: "${searchForm.value.author.trim()}"`);
       }
-      if (searchForm.value.tags.length > 0) {
-        const tagText = searchForm.value.tags.join(', ');
-        const type = searchForm.value.tagIntersection ? 'all tags' : 'any tags';
-        criteria.push(`${type}: ${tagText}`);
+      if (searchForm.value.userTags.length > 0) {
+        const tagText = searchForm.value.userTags.join(', ');
+        criteria.push(`user tags: ${tagText}`);
+      }
+      if (searchForm.value.categoryTags.length > 0) {
+        const categoryText = searchForm.value.categoryTags.join(', ');
+        criteria.push(`categories: ${categoryText}`);
       }
       return `for ${criteria.join(', ')}`;
     };
@@ -369,16 +421,19 @@ export default {
     
     return {
       searchForm,
-      tagInput,
-      tagSuggestions,
+      userTagInput,
+      categoryTagInput,
+      userTagSuggestions,
       isSearching,
       hasSearched,
       searchResults,
       hasSearchCriteria,
-      handleTagInput,
-      addTag,
-      selectTagSuggestion,
-      removeTag,
+      handleUserTagInput,
+      addUserTag,
+      selectUserTagSuggestion,
+      removeUserTag,
+      addCategoryTag,
+      removeCategoryTag,
       clearForm,
       handleSearch,
       getSearchSummary
@@ -487,7 +542,6 @@ export default {
 }
 
 .selected-tag {
-  background: #889841;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 20px;
@@ -495,6 +549,14 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.selected-tag.user-tag {
+  background: #889841;
+}
+
+.selected-tag.category-tag {
+  background: #6c4b73;
 }
 
 .remove-tag-btn {

@@ -63,8 +63,15 @@ export function useShelving() {
   const getUserShelfForBook = async (userId, bookId) => {
     try {
       const response = await apiService.getUserShelfByBook(currentSession.value, bookId);
-      response = [response.shelfNumber] || [];
-      return response && response.length > 0 ? response[0].status : null;
+      // Handle different response formats
+      if (response && response.status !== undefined) {
+        return response.status;
+      } else if (response && response.shelfNumber !== undefined) {
+        return response.shelfNumber;
+      } else if (Array.isArray(response) && response.length > 0) {
+        return response[0].status || response[0].shelfNumber || null;
+      }
+      return null;
     } catch (error) {
       console.error('Failed to get user shelf for book:', error);
       return null;
