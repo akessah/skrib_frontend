@@ -25,12 +25,14 @@ export function useTags() {
   };
 
   const loadBookTags = async (userId, bookId) => {
-    if (!userId || !bookId) return;
+    if (!userId || !bookId) return [];
     
     try {
       const response = await apiService.getTagsByBook(currentSession.value, bookId);
-      bookTags.value[bookId] = response.tag || [];
-      return response.tag || [];
+      // Handle different response formats: array directly or { tag: [...] }
+      const tagsArray = Array.isArray(response) ? response : (response?.tag || []);
+      bookTags.value[bookId] = tagsArray;
+      return tagsArray;
     } catch (error) {
       console.error('Failed to load book tags:', error);
       bookTags.value[bookId] = [];

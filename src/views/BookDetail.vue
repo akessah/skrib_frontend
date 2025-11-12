@@ -117,23 +117,23 @@
       </div>
       
       <!-- Tags Section -->
-      <div v-if="bookTags.length > 0 || isAuthenticated" class="tags-section">
+      <div v-if="consolidatedTags.length > 0 || isAuthenticated" class="tags-section">
         <h3>Tags</h3>
         
-        <div v-if="bookTags.length > 0" class="existing-tags">
+        <div v-if="consolidatedTags.length > 0" class="existing-tags">
           <div class="tags-list">
             <span 
-              v-for="tag in bookTags" 
-              :key="tag._id"
+              v-for="tagGroup in consolidatedTags" 
+              :key="tagGroup.label"
               class="tag-item"
-              :class="{ 'private-tag': tag.private }"
+              :class="{ 'private-tag': tagGroup.hasPrivateTag }"
             >
-              {{ tag.label }}
+              {{ tagGroup.label }} <span class="tag-count">({{ tagGroup.count }})</span>
               <button 
-                v-if="tag.user === currentUser"
-                @click="removeTag(tag._id)"
+                v-if="tagGroup.userHasTag"
+                @click="removeUserTagForLabel(tagGroup.label)"
                 class="remove-tag-btn"
-                title="Remove tag"
+                title="Remove your tag"
               >
                 ×
               </button>
@@ -184,7 +184,7 @@
           </div>
         </div>
         
-        <div v-else-if="isAuthenticated && bookTags.length === 0" class="no-tags">
+        <div v-else-if="isAuthenticated && consolidatedTags.length === 0" class="no-tags">
           <p>No tags yet. Be the first to tag this book!</p>
           <button @click="toggleTagForm" class="add-first-tag-btn">
             <img src="../../assets/tag.png" alt="Tag icon" width = "15"></img> Add First Tag
@@ -232,6 +232,45 @@ export default {
     
     const hasTags = computed(() => bookTags.value.length > 0);
     
+    // Consolidate tags by label with counts
+    const consolidatedTags = computed(() => {
+      if (!bookTags.value || bookTags.value.length === 0) return [];
+      
+      // Group tags by label
+      const labelMap = {};
+      bookTags.value.forEach(tag => {
+        if (!tag || !tag.label) return;
+        
+        if (!labelMap[tag.label]) {
+          labelMap[tag.label] = {
+            label: tag.label,
+            count: 0,
+            tags: [],
+            userHasTag: false,
+            userTagId: null,
+            hasPrivateTag: false
+          };
+        }
+        
+        labelMap[tag.label].count++;
+        labelMap[tag.label].tags.push(tag);
+        
+        // Check if current user has this tag
+        if (tag.user === currentUser.value) {
+          labelMap[tag.label].userHasTag = true;
+          labelMap[tag.label].userTagId = tag._id;
+        }
+        
+        // Check if any tag with this label is private
+        if (tag.private) {
+          labelMap[tag.label].hasPrivateTag = true;
+        }
+      });
+      
+      // Convert to array and sort by label
+      return Object.values(labelMap).sort((a, b) => a.label.localeCompare(b.label));
+    });
+    
     const loadBookDetails = async () => {
       const bookId = route.params.id;
       if (!bookId) {
@@ -278,8 +317,9 @@ export default {
         if (result.success) {
           tagSuccess.value = 'Tag added successfully!';
           newTagLabel.value = '';
-          await loadBookTags(currentUser.value, book.value.id);
-          bookTags.value = await loadBookTags(currentUser.value, book.value.id);
+          // Reload tags to update consolidated display
+          const tags = await loadBookTags(currentUser.value, book.value.id);
+          bookTags.value = tags || [];
           setTimeout(() => {
             tagSuccess.value = null;
             showTagForm.value = false;
@@ -300,6 +340,33 @@ export default {
         if (result.success) {
           await loadBookTags(currentUser.value, book.value.id);
           bookTags.value = await loadBookTags(currentUser.value, book.value.id);
+        } else {
+          tagError.value = result.error || 'Failed to remove tag';
+        }
+      } catch (error) {
+        tagError.value = 'Failed to remove tag. Please try again.';
+      }
+    };
+    
+    const removeUserTagForLabel = async (label) => {
+      if (!currentUser.value || !book.value) return;
+      
+      // Find the user's tag with this label
+      const userTag = bookTags.value.find(tag => 
+        tag.label === label && tag.user === currentUser.value
+      );
+      
+      if (!userTag) {
+        tagError.value = 'Tag not found';
+        return;
+      }
+      
+      try {
+        const result = await removeTag(userTag._id);
+        if (result.success) {
+          // Reload tags to update counts
+          const tags = await loadBookTags(currentUser.value, book.value.id);
+          bookTags.value = tags || [];
         } else {
           tagError.value = result.error || 'Failed to remove tag';
         }
@@ -362,11 +429,13 @@ export default {
       tagSuccess,
       bookTags,
       hasTags,
+      consolidatedTags,
       currentUser,
       isAuthenticated,
       toggleTagForm,
       handleAddTag,
       removeTag: handleRemoveTag,
+      removeUserTagForLabel,
       formatDate,
       getStars,
       splitCategories
@@ -679,6 +748,12 @@ export default {
   align-items: center;
   gap: 0.5rem;
   position: relative;
+}
+
+.tag-count {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 500;
 }
 
 .private-tag {
