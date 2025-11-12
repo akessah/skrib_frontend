@@ -5,7 +5,7 @@
     </div>
     
     <div v-else class="shelf-controls">
-      <div v-if="currentStatus === null" class="add-to-shelf">
+      <div v-if="!hasShelfStatus" class="add-to-shelf">
         <label class="shelf-label">Add to Shelf:</label>
         <select 
           v-model="selectedStatus" 
@@ -109,14 +109,31 @@ export default {
     const error = ref(null);
     const success = ref(null);
     
+    // Computed to check if we have a valid shelf status
+    const hasShelfStatus = computed(() => {
+      const status = currentStatus.value;
+      return status !== null && status !== undefined && (status === 0 || status === 1 || status === 2 || status === 3);
+    });
+    
     const loadCurrentStatus = async () => {
-      if (!isAuthenticated.value || !currentUser.value) return;
+      if (!isAuthenticated.value || !currentUser.value || !props.bookId) {
+        console.log('ShelfButton: loadCurrentStatus skipped', { 
+          isAuthenticated: isAuthenticated.value, 
+          currentUser: currentUser.value, 
+          bookId: props.bookId 
+        });
+        return;
+      }
       
       try {
+        console.log('ShelfButton: Loading status for book:', props.bookId);
         const status = await getUserShelfForBook(currentUser.value, props.bookId);
+        console.log('ShelfButton: Received status:', status, 'Type:', typeof status);
         currentStatus.value = status;
+        console.log('ShelfButton: currentStatus.value set to:', currentStatus.value);
       } catch (err) {
         console.error('Failed to load current shelf status:', err);
+        currentStatus.value = null;
       }
     };
     
@@ -259,8 +276,33 @@ export default {
       }
     });
     
+    // Watch for bookId changes (when navigating to different book)
+    watch(() => props.bookId, (newBookId, oldBookId) => {
+      console.log('ShelfButton: bookId changed from', oldBookId, 'to', newBookId);
+      if (newBookId && isAuthenticated.value && currentUser.value) {
+        loadCurrentStatus();
+      } else {
+        currentStatus.value = null;
+      }
+    });
+    
+    // Watch for currentUser changes
+    watch(currentUser, (newUser, oldUser) => {
+      console.log('ShelfButton: currentUser changed from', oldUser, 'to', newUser);
+      if (newUser && isAuthenticated.value && props.bookId) {
+        loadCurrentStatus();
+      } else {
+        currentStatus.value = null;
+      }
+    });
+    
     onMounted(() => {
-      if (isAuthenticated.value && currentUser.value) {
+      console.log('ShelfButton: onMounted', { 
+        isAuthenticated: isAuthenticated.value, 
+        currentUser: currentUser.value, 
+        bookId: props.bookId 
+      });
+      if (isAuthenticated.value && currentUser.value && props.bookId) {
         loadCurrentStatus();
       }
     });
@@ -269,6 +311,7 @@ export default {
       currentUser,
       isAuthenticated,
       currentStatus,
+      hasShelfStatus,
       selectedStatus,
       newStatus,
       isLoading,
