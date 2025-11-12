@@ -1,6 +1,11 @@
 import { ref, computed } from 'vue';
 import apiService from '../services/api.js';
 import { useAuth } from './useAuth.js';
+// Import assets so Vite can process them correctly
+import bookStackIcon from '../../assets/book-stack.png';
+import openBookIcon from '../../assets/open-book.png';
+import bookIcon from '../../assets/book.png';
+import xMarkIcon from '../../assets/x-mark.png';
 
 // Global state for shelves
 const userShelves = ref([]);
@@ -23,10 +28,10 @@ export const SHELF_LABELS = {
 };
 
 export const SHELF_ICONS = {
-  [SHELF_STATUS.WANT_TO_READ]: '<img src="../../assets/book-stack.png" alt="Books icon" width="20">',
-  [SHELF_STATUS.CURRENTLY_READING]: '<img src="../../assets/open-book.png" alt="Open book icon" width="20">',
-  [SHELF_STATUS.READ]: '<img src="../../assets/book.png" alt="Checkmark icon" width="20">',
-  [SHELF_STATUS.DID_NOT_FINISH]: '<img src="../../assets/x-mark.png" alt="X mark icon" width="20">'
+  [SHELF_STATUS.WANT_TO_READ]: `<img src="${bookStackIcon}" alt="Books icon" width="20">`,
+  [SHELF_STATUS.CURRENTLY_READING]: `<img src="${openBookIcon}" alt="Open book icon" width="20">`,
+  [SHELF_STATUS.READ]: `<img src="${bookIcon}" alt="Checkmark icon" width="20">`,
+  [SHELF_STATUS.DID_NOT_FINISH]: `<img src="${xMarkIcon}" alt="X mark icon" width="20">`
 };
 
 export function useShelving() {
