@@ -1,10 +1,10 @@
 // API service for handling backend communication
-const API_BASE_URL = 'http://localhost:8000'; // Backend URL on port 8000
+// const API_BASE_URL = 'http://localhost:8000'; // Backend URL on port 8000
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 class ApiService {
   async makeRequest(endpoint, method = 'POST', body = null) {
-    const url = `${API_BASE_URL}${endpoint}`;
+    const url = `${API_BASE}${endpoint}`;
     const options = {
       method,
       headers: {
