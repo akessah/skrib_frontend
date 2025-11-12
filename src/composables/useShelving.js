@@ -63,14 +63,35 @@ export function useShelving() {
   const getUserShelfForBook = async (userId, bookId) => {
     try {
       const response = await apiService.getUserShelfByBook(currentSession.value, bookId);
-      // Handle different response formats
-      if (response && response.status !== undefined) {
-        return response.status;
-      } else if (response && response.shelfNumber !== undefined) {
-        return response.shelfNumber;
-      } else if (Array.isArray(response) && response.length > 0) {
-        return response[0].status || response[0].shelfNumber || null;
+      console.log('getUserShelfForBook response:', response);
+      
+      // According to API spec, response is an array: [{ status: number }]
+      if (Array.isArray(response) && response.length > 0) {
+        const status = response[0].status;
+        // Convert to number if it's a string, and ensure it's a valid status (0-3)
+        const statusNum = typeof status === 'string' ? parseInt(status, 10) : status;
+        if (statusNum !== undefined && statusNum !== null && !isNaN(statusNum) && statusNum >= 0 && statusNum <= 3) {
+          console.log('getUserShelfForBook returning status:', statusNum);
+          return statusNum;
+        }
+      } 
+      // Fallback: handle if response is a direct object
+      else if (response && typeof response === 'object') {
+        if (response.status !== undefined) {
+          const statusNum = typeof response.status === 'string' ? parseInt(response.status, 10) : response.status;
+          if (!isNaN(statusNum) && statusNum >= 0 && statusNum <= 3) {
+            return statusNum;
+          }
+        }
+        if (response.shelfNumber !== undefined) {
+          const statusNum = typeof response.shelfNumber === 'string' ? parseInt(response.shelfNumber, 10) : response.shelfNumber;
+          if (!isNaN(statusNum) && statusNum >= 0 && statusNum <= 3) {
+            return statusNum;
+          }
+        }
       }
+      
+      console.log('getUserShelfForBook: No valid status found, returning null');
       return null;
     } catch (error) {
       console.error('Failed to get user shelf for book:', error);
